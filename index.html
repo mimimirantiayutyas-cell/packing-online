@@ -18,7 +18,7 @@
   body{
     font-family:'Inter',system-ui,Arial,sans-serif;color:var(--txt);background:var(--bg);
     padding:18px 14px calc(30px + env(safe-area-inset-bottom));
-    perspective:1400px; overflow-x:hidden;
+    overflow-x:hidden;
   }
 
   .wrap{position:relative;z-index:1;max-width:560px;margin:auto}
@@ -50,7 +50,6 @@
   .titlebox{display:flex;flex-direction:column;align-items:flex-start;min-width:0}
   h1{margin:0;display:inline-block;white-space:nowrap;font-size:clamp(17px,5.4vw,22px);font-weight:800;letter-spacing:-.3px;
     background:linear-gradient(90deg,#14213d,#0a8a60);-webkit-background-clip:text;background-clip:text;color:transparent}
-  /* lebar teks ini disamakan otomatis dengan lebar judul lewat script di bawah */
   .sub{display:inline-block;white-space:nowrap;line-height:1;margin-top:6px;font-size:15px;font-weight:900;
     letter-spacing:.12em;color:var(--red);
     text-shadow:.06em .06em 0 #a30c1f,.12em .12em .18em rgba(0,0,0,.25)}
@@ -117,13 +116,20 @@
   .foto img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
   .foto.has{border-style:solid;border-color:#10c88a}
   .foto.has img{display:block}
-  .foto input{display:none}
   .foto .x{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;border:0;display:none;
     background:rgba(255,69,96,.92);color:#fff;font-weight:800;cursor:pointer;z-index:2;line-height:1}
   .foto.has .x{display:block}
   .foto .n{position:absolute;left:8px;bottom:6px;font-size:11px;font-weight:800;color:#fff;z-index:2;
     background:rgba(0,0,0,.5);padding:2px 8px;border-radius:999px;display:none}
   .foto.has .n{display:block}
+
+  /* menu pilih sumber foto */
+  #sheet{position:fixed;inset:0;z-index:70;background:rgba(3,7,16,.6);display:none;align-items:flex-end;justify-content:center}
+  #sheet.open{display:flex}
+  .sh{width:100%;max-width:560px;background:#fff;border-radius:22px 22px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));display:grid;gap:10px}
+  .sh h4{margin:0 0 4px;font-size:15px}
+  .sh button{padding:15px;border:0;border-radius:14px;font:700 15px 'Inter',sans-serif;cursor:pointer;background:var(--field);color:var(--txt)}
+  .sh button.c{background:#ffe3e8;color:#b02338}
 
   /* tombol simpan */
   .save{
@@ -142,7 +148,7 @@
 
   /* toast */
   #toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translate(-50%,120px);
-    max-width:92vw;padding:14px 20px;border-radius:14px;font-weight:700;font-size:14px;z-index:60;
+    max-width:92vw;padding:14px 20px;border-radius:14px;font-weight:700;font-size:14px;z-index:90;
     box-shadow:0 14px 34px rgba(20,33,61,.35);transition:transform .35s cubic-bezier(.2,1.2,.4,1)}
   #toast.show{transform:translate(-50%,0)}
   #toast.ok{background:#10c88a;color:#032a1e}
@@ -237,10 +243,10 @@
 
       <label>Foto (maks 4)</label>
       <div class="fotos">
-        <div class="foto" data-i="0"><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><br>Foto 1</div><img alt=""><span class="n">1</span><button type="button" class="x">×</button><input type="file" accept="image/*" capture="environment"></div>
-        <div class="foto" data-i="1"><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><br>Foto 2</div><img alt=""><span class="n">2</span><button type="button" class="x">×</button><input type="file" accept="image/*" capture="environment"></div>
-        <div class="foto" data-i="2"><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><br>Foto 3</div><img alt=""><span class="n">3</span><button type="button" class="x">×</button><input type="file" accept="image/*" capture="environment"></div>
-        <div class="foto" data-i="3"><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><br>Foto 4</div><img alt=""><span class="n">4</span><button type="button" class="x">×</button><input type="file" accept="image/*" capture="environment"></div>
+        <div class="foto" data-i="0"><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><br>Foto 1</div><img alt=""><span class="n">1</span><button type="button" class="x">×</button></div>
+        <div class="foto" data-i="1"><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><br>Foto 2</div><img alt=""><span class="n">2</span><button type="button" class="x">×</button></div>
+        <div class="foto" data-i="2"><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><br>Foto 3</div><img alt=""><span class="n">3</span><button type="button" class="x">×</button></div>
+        <div class="foto" data-i="3"><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><br>Foto 4</div><img alt=""><span class="n">4</span><button type="button" class="x">×</button></div>
       </div>
 
       <button class="save" id="btn" type="submit"><span class="spin"></span><span id="btnTxt">SIMPAN DATA</span></button>
@@ -257,6 +263,14 @@
     <button class="close" id="closeScan" type="button">TUTUP</button>
   </div>
 </div>
+
+<!-- PILIH SUMBER FOTO -->
+<div id="sheet"><div class="sh">
+  <h4>Tambah Foto</h4>
+  <button type="button" id="shCam">📷 Ambil Foto Langsung</button>
+  <button type="button" id="shGal">🖼️ Pilih dari Galeri / Folder</button>
+  <button type="button" class="c" id="shX">Batal</button>
+</div></div>
 
 <div id="toast"></div>
 
@@ -297,7 +311,7 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitSub);
 let tt;
 function toast(msg, ok) {
   const t = $('toast'); t.textContent = msg; t.className = (ok ? 'ok' : 'err') + ' show';
-  clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 3800);
+  clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 4500);
 }
 
 /* ---------- Efek tilt 3D kartu (desktop) ---------- */
@@ -305,12 +319,12 @@ if (matchMedia('(pointer:fine)').matches) {
   const c = $('card');
   document.addEventListener('mousemove', e => {
     const x = (e.clientX / innerWidth - .5), y = (e.clientY / innerHeight - .5);
-    c.style.transform = `rotateY(${x * 6}deg) rotateX(${-y * 5}deg)`;
+    c.style.transform = `perspective(1400px) rotateY(${x * 6}deg) rotateX(${-y * 5}deg)`;
   });
   document.addEventListener('mouseleave', () => c.style.transform = '');
 }
 
-/* ---------- Nama PIC ---------- */
+/* ---------- Nama PIC & Invoice ---------- */
 $('nama').value = localStorage.getItem('pic') || '';
 $('nama').addEventListener('input', e => e.target.value = e.target.value.toUpperCase());
 $('invoice').addEventListener('input', e => e.target.value = e.target.value.toUpperCase().replace(/\s+/g, ''));
@@ -322,12 +336,16 @@ $('plus').onclick = () => $('koli').value = (+$('koli').value || 0) + 1;
 /* ---------- Perekam suara (speech to text) ---------- */
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 const ANGKA = {nol:0,kosong:0,satu:1,dua:2,tiga:3,empat:4,lima:5,enam:6,tujuh:7,delapan:8,sembilan:9};
+const HURUF = {ai:'i',en:'n',ve:'v',fi:'v',pe:'p'};
 function normInvoice(s) {
-  return s.toLowerCase().split(/\s+/).map(w => (w in ANGKA) ? ANGKA[w] : w).join('')
+  return s.toLowerCase().split(/\s+/).map(w => (w in ANGKA) ? ANGKA[w] : (w in HURUF) ? HURUF[w] : w).join('')
           .replace(/[^a-z0-9]/g, '').toUpperCase();
 }
 function voice(btn, input, hint, mode) {
-  if (!SR) { toast('Browser tidak mendukung perekam suara. Pakai Chrome.', false); return; }
+  if (!SR || !window.isSecureContext) {
+    toast('Perekam suara hanya jalan di Chrome lewat alamat https. Jangan buka dari WhatsApp/Instagram, buka lewat Chrome.', false);
+    return;
+  }
   if (btn._rec) { btn._rec.stop(); return; }
   const rec = new SR();
   rec.lang = 'id-ID'; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 1;
@@ -342,14 +360,21 @@ function voice(btn, input, hint, mode) {
   };
   rec.onerror = e => {
     hint.textContent = '';
-    toast(e.error === 'not-allowed' ? 'Izin mikrofon ditolak. Aktifkan di pengaturan browser.' : 'Suara gagal dikenali: ' + e.error, false);
+    const m = {
+      'not-allowed': 'Izin mikrofon ditolak. Aktifkan di pengaturan situs.',
+      'service-not-allowed': 'Layanan suara diblokir di browser ini. Pakai Chrome.',
+      'no-speech': 'Suara tidak terdengar, coba lagi.',
+      'network': 'Perekam suara butuh internet.'
+    };
+    toast(m[e.error] || ('Suara gagal dikenali: ' + e.error), false);
   };
   rec.onend = () => {
     btn.classList.remove('rec'); btn._rec = null;
     if (finalText) hint.textContent = '✔ Terdeteksi: ' + (mode === 'inv' ? normInvoice(finalText) : finalText.toUpperCase());
     setTimeout(() => { if (!btn._rec) hint.textContent = ''; }, 3500);
   };
-  rec.start();
+  try { rec.start(); }
+  catch (e) { btn._rec = null; btn.classList.remove('rec'); toast('Tidak bisa memulai mic: ' + e.message, false); }
 }
 $('micNama').onclick = () => voice($('micNama'), $('nama'), $('hNama'), 'nama');
 $('micInv').onclick  = () => voice($('micInv'),  $('invoice'), $('hInv'), 'inv');
@@ -369,8 +394,14 @@ async function stopScan() {
   $('scan').classList.remove('open');
   if (qr) { try { await qr.stop(); qr.clear(); } catch (e) {} qr = null; }
 }
+function cleanInv(t) {
+  t = t.toUpperCase().replace(/\s+/g, '');
+  const m = t.match(/INV\d+/);
+  return m ? m[0] : t;
+}
 $('btnScan').onclick = async () => {
   try {
+    if (!window.isSecureContext || !navigator.mediaDevices) throw new Error('Kamera hanya bisa lewat https. Buka lewat Chrome, bukan dari dalam aplikasi lain.');
     await loadLib();
     $('scan').classList.add('open');
     const F = Html5QrcodeSupportedFormats;
@@ -379,16 +410,19 @@ $('btnScan').onclick = async () => {
       experimentalFeatures: { useBarCodeDetectorIfSupported: true },
       verbose: false
     });
-    await qr.start(
-      { facingMode: 'environment' },
-      { fps: 12, qrbox: (w) => ({ width: Math.floor(w * .85), height: Math.floor(w * .45) }) },
-      text => {
-        $('invoice').value = text.toUpperCase().replace(/\s+/g, '');
-        if (navigator.vibrate) navigator.vibrate(120);
-        stopScan(); toast('✅ Barcode terbaca: ' + $('invoice').value, true);
-      },
-      () => {}
-    );
+    const onOk = text => {
+      $('invoice').value = cleanInv(text);
+      if (navigator.vibrate) navigator.vibrate(120);
+      stopScan(); toast('✅ Barcode terbaca: ' + $('invoice').value, true);
+    };
+    const cfg = { fps: 10, qrbox: (w) => ({ width: Math.floor(w * .85), height: Math.floor(w * .4) }) };
+    try {
+      await qr.start({ facingMode: 'environment' },
+        { ...cfg, videoConstraints: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 }, advanced: [{ focusMode: 'continuous' }] } },
+        onOk, () => {});
+    } catch (e1) {
+      await qr.start({ facingMode: 'environment' }, cfg, onOk, () => {});
+    }
   } catch (err) {
     stopScan();
     toast(err.message || 'Kamera tidak bisa dibuka. Izinkan akses kamera.', false);
@@ -396,7 +430,7 @@ $('btnScan').onclick = async () => {
 };
 $('closeScan').onclick = stopScan;
 
-/* ---------- Foto ---------- */
+/* ---------- Foto (kamera langsung / galeri) ---------- */
 function compress(file, max = 1280, q = 0.7) {
   return new Promise(res => {
     const img = new Image(), url = URL.createObjectURL(file);
@@ -409,24 +443,51 @@ function compress(file, max = 1280, q = 0.7) {
       URL.revokeObjectURL(url);
       res({ data: d.split(',')[1], type: 'image/jpeg', preview: d });
     };
+    img.onerror = () => { URL.revokeObjectURL(url); res(null); };
     img.src = url;
   });
 }
-document.querySelectorAll('.foto').forEach(box => {
-  const i = +box.dataset.i, inp = box.querySelector('input'), img = box.querySelector('img');
-  box.addEventListener('click', e => { if (!e.target.classList.contains('x')) inp.click(); });
-  inp.addEventListener('click', e => e.stopPropagation());
-  inp.addEventListener('change', async () => {
-    const f = inp.files[0];
-    if (!f) return;
-    const r = await compress(f);
+const boxes = [...document.querySelectorAll('.foto')];
+const camIn = document.createElement('input'), galIn = document.createElement('input');
+camIn.type = galIn.type = 'file';
+camIn.accept = galIn.accept = 'image/*';
+camIn.capture = 'environment';
+galIn.multiple = true;
+camIn.style.display = galIn.style.display = 'none';
+document.body.append(camIn, galIn);
+let slot = 0;
+
+async function addFiles(files, start) {
+  const order = [start, ...[0, 1, 2, 3].filter(k => k !== start && !fotos[k])];
+  const list = [...files];
+  for (let k = 0; k < list.length && k < order.length; k++) {
+    const r = await compress(list[k]);
+    if (!r) { toast('Foto tidak bisa dibaca (format tidak didukung)', false); continue; }
+    const i = order[k];
     fotos[i] = { data: r.data, type: r.type };
-    img.src = r.preview; box.classList.add('has');
+    boxes[i].querySelector('img').src = r.preview;
+    boxes[i].classList.add('has');
+  }
+  if (list.length > order.length) toast('Maksimal 4 foto', false);
+}
+camIn.onchange = async () => { if (camIn.files.length) await addFiles(camIn.files, slot); camIn.value = ''; };
+galIn.onchange = async () => { if (galIn.files.length) await addFiles(galIn.files, slot); galIn.value = ''; };
+
+boxes.forEach(box => {
+  const i = +box.dataset.i;
+  box.addEventListener('click', e => {
+    if (e.target.classList.contains('x')) return;
+    slot = i; $('sheet').classList.add('open');
   });
   box.querySelector('.x').addEventListener('click', e => {
-    e.stopPropagation(); fotos[i] = null; inp.value = ''; img.removeAttribute('src'); box.classList.remove('has');
+    e.stopPropagation(); fotos[i] = null;
+    box.querySelector('img').removeAttribute('src'); box.classList.remove('has');
   });
 });
+$('shCam').onclick = () => { $('sheet').classList.remove('open'); camIn.click(); };
+$('shGal').onclick = () => { $('sheet').classList.remove('open'); galIn.click(); };
+$('shX').onclick   = () => $('sheet').classList.remove('open');
+$('sheet').addEventListener('click', e => { if (e.target.id === 'sheet') $('sheet').classList.remove('open'); });
 
 /* ---------- Kirim ---------- */
 $('f').addEventListener('submit', async e => {
@@ -458,9 +519,7 @@ $('f').addEventListener('submit', async e => {
     localStorage.setItem('pic', nama);
     toast('✅ Tersimpan! ID: ' + r.id + ' (baris ' + r.row + ')', true);
     $('invoice').value = ''; $('koli').value = 1; $('pengiriman').value = '';
-    document.querySelectorAll('.foto').forEach(b => {
-      b.querySelector('input').value = ''; b.querySelector('img').removeAttribute('src'); b.classList.remove('has');
-    });
+    boxes.forEach(b => { b.querySelector('img').removeAttribute('src'); b.classList.remove('has'); });
     fotos.fill(null);
     $('invoice').focus();
   } catch (err) {
