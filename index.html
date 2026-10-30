@@ -87,7 +87,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .spin{width:18px;height:18px;border:3px solid rgba(4,35,26,.3);border-top-color:#04231a;border-radius:50%;animation:r .7s linear infinite;display:none}
 .save:disabled .spin{display:block}
 @keyframes r{to{transform:rotate(360deg)}}
-#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translate(-50%,120px);max-width:92vw;padding:14px 20px;border-radius:14px;font-weight:700;font-size:14px;z-index:90;box-shadow:0 14px 34px rgba(20,33,61,.35);transition:transform .35s cubic-bezier(.2,1.2,.4,1)}
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translate(-50%,120px);max-width:92vw;padding:14px 20px;border-radius:14px;font-weight:700;font-size:14px;z-index:120;box-shadow:0 14px 34px rgba(20,33,61,.35);transition:transform .35s cubic-bezier(.2,1.2,.4,1)}
 #toast.show{transform:translate(-50%,0)}#toast.ok{background:#10c88a;color:#032a1e}#toast.err{background:#ff4560;color:#fff}
 #scan{position:fixed;inset:0;z-index:50;background:rgba(3,7,16,.92);display:none;flex-direction:column;align-items:center;justify-content:center;padding:18px}
 #scan.open{display:flex}
@@ -108,22 +108,53 @@ tbody td{padding:8px 14px;border-bottom:1px solid #edf1f6;vertical-align:middle}
 tbody tr:hover{background:#f7fafd}
 td.no{color:var(--mut);width:56px}td.inv{font-weight:800;word-break:break-all}td.kl{font-weight:700}
 .ph{display:flex;gap:6px;flex-wrap:wrap}
-.ph a{display:block;width:72px;height:54px;border-radius:8px;overflow:hidden;background:#e9eef4;border:1px solid var(--line)}
+.ph a{display:block;width:72px;height:54px;border-radius:8px;overflow:hidden;background:#e9eef4;border:1px solid var(--line);cursor:pointer}
 .ph img{width:100%;height:100%;object-fit:cover;display:block}
 .none{font-size:12px;color:#a0adbf}
 .msg{padding:40px 10px;text-align:center;color:var(--mut)}.msg.err{color:var(--red)}
+.ebtn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;font:700 13px 'Inter',sans-serif;color:var(--txt);cursor:pointer;white-space:nowrap}
+.ebtn:hover{background:#eef3f8}
 .pager{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;font-size:13px;color:var(--mut)}
 .pager button{padding:9px 16px;border:1px solid var(--line);border-radius:10px;background:#fff;font:700 13px 'Inter',sans-serif;color:var(--txt);cursor:pointer}
 .pager button:disabled{opacity:.4;cursor:default}
+.tbwrap.busy tbody{opacity:.45;transition:opacity .15s}
 @media (max-width:760px){
  .tbwrap{max-height:none;border:0;background:transparent;overflow:visible}
  thead{display:none}table,tbody,tr,td{display:block}
  tr{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 14px;margin-bottom:10px}
  tbody td{border:0;padding:3px 0}td.no{display:none}
  td[data-l]::before{content:attr(data-l) ": ";color:var(--mut);font-size:12px}
+ td.ak{padding-top:8px}
 }
-#lb{position:fixed;inset:0;background:rgba(3,7,16,.88);display:none;align-items:center;justify-content:center;z-index:95;padding:14px}
-#lb.open{display:flex}#lb img{max-width:100%;max-height:92vh;border-radius:8px}
+
+/* lightbox galeri */
+#lb{position:fixed;inset:0;background:rgba(3,7,16,.94);display:none;z-index:95;flex-direction:column;touch-action:pan-y}
+#lb.open{display:flex}
+.lbtop{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:calc(12px + env(safe-area-inset-top)) 14px 10px;color:#fff;font-weight:700;font-size:14px}
+.lbtop .ttl{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lbtop .act{display:flex;gap:8px;flex:none}
+.lbbtn{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:10px;padding:9px 14px;font:700 13px 'Inter',sans-serif;color:#fff;background:rgba(255,255,255,.16);cursor:pointer;text-decoration:none}
+.lbbtn.dl{background:#10c88a;color:#032a1e}
+.lbstage{flex:1;min-height:0;position:relative;display:grid;place-items:center;padding:0 54px}
+.lbstage img{max-width:100%;max-height:100%;object-fit:contain;border-radius:6px;user-select:none;-webkit-user-drag:none;transition:opacity .15s}
+.lbstage img.ld{opacity:.35}
+.lnav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:64px;border:0;border-radius:12px;font-size:30px;color:#fff;background:rgba(255,255,255,.14);cursor:pointer;z-index:2}
+.lnav.prev{left:4px}.lnav.next{right:4px}.lnav:disabled{opacity:.25;cursor:default}
+.lnav.hide{display:none}
+.dots{display:flex;justify-content:center;gap:8px;padding:12px 0 calc(14px + env(safe-area-inset-bottom))}
+.dots i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.3)}.dots i.on{background:#fff}
+@media (max-width:760px){.lbstage{padding:0 6px}.lnav{width:38px;height:54px;opacity:.8}}
+
+/* modal edit */
+#ed{position:fixed;inset:0;z-index:100;background:rgba(3,7,16,.6);display:none;align-items:center;justify-content:center;padding:16px}
+#ed.open{display:flex}
+.edb{width:100%;max-width:440px;background:#fff;border-radius:20px;padding:20px 18px 18px;box-shadow:0 30px 60px rgba(0,0,0,.35)}
+.edb h4{margin:0 0 2px;font-size:17px}
+.edb .meta{font-size:12px;color:var(--mut)}
+.edact{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
+.edact button{padding:14px;border:0;border-radius:14px;font:800 15px 'Inter',sans-serif;cursor:pointer;background:var(--field);color:var(--txt)}
+.edact button.ok{background:#10c88a;color:#032a1e}
+.edact button:disabled{opacity:.6;cursor:wait}
 @media (prefers-reduced-motion:reduce){.cube{animation:none}}
 </style>
 </head>
@@ -203,7 +234,7 @@ td.no{color:var(--mut);width:56px}td.inv{font-weight:800;word-break:break-all}td
       <button id="reload" type="button" style="background:#2a8fe6">Muat ulang</button>
     </div>
     <div class="stats" id="stats"></div>
-    <div class="tbwrap"><table><thead><tr><th>No</th><th>Tanggal</th><th>Invoice</th><th>PIC</th><th>Pengiriman</th><th>Koli</th><th>Foto</th></tr></thead><tbody id="list"></tbody></table></div>
+    <div class="tbwrap" id="tbwrap"><table><thead><tr><th>No</th><th>Tanggal</th><th>Invoice</th><th>PIC</th><th>Pengiriman</th><th>Koli</th><th>Foto</th><th>Aksi</th></tr></thead><tbody id="list"></tbody></table></div>
     <div class="pager" id="pager"></div>
   </div>
 </div>
@@ -213,7 +244,35 @@ td.no{color:var(--mut);width:56px}td.inv{font-weight:800;word-break:break-all}td
   <button type="button" id="shCam">📷 Ambil Foto Langsung</button>
   <button type="button" id="shGal">🖼️ Pilih dari Galeri / Folder</button>
   <button type="button" class="c" id="shX">Batal</button></div></div>
-<div id="lb"><img alt=""></div>
+
+<!-- galeri foto -->
+<div id="lb">
+  <div class="lbtop">
+    <span class="ttl" id="lbTitle"></span>
+    <span class="act">
+      <a class="lbbtn dl" id="lbDl" target="_blank" rel="noopener">⬇ Unduh</a>
+      <button class="lbbtn" id="lbClose" type="button" aria-label="Tutup">✕</button>
+    </span>
+  </div>
+  <div class="lbstage" id="lbStage">
+    <button class="lnav prev" id="lbPrev" type="button" aria-label="Foto sebelumnya">‹</button>
+    <img id="lbImg" alt="">
+    <button class="lnav next" id="lbNext" type="button" aria-label="Foto berikutnya">›</button>
+  </div>
+  <div class="dots" id="lbDots"></div>
+</div>
+
+<!-- modal edit -->
+<div id="ed"><div class="edb">
+  <h4>Edit Data</h4><div class="meta" id="eMeta"></div>
+  <label for="eInv">No. Invoice</label>
+  <input id="eInv" autocapitalize="characters" autocomplete="off">
+  <div class="row">
+    <div><label for="ePeng">Pengiriman</label><select id="ePeng"></select></div>
+    <div><label for="eKoli">Jumlah Koli</label><input type="number" id="eKoli" min="1" inputmode="numeric"></div>
+  </div>
+  <div class="edact"><button type="button" id="eCancel">Batal</button><button type="button" class="ok" id="eSave">Simpan</button></div>
+</div></div>
 <div id="toast"></div>
 
 <script>
@@ -223,6 +282,7 @@ const SECRET  = 'rahasia123';
 
 const $ = id => document.getElementById(id);
 const fotos = [null, null, null, null];
+const CACHE = new Map();      // cache hasil monitoring per filter+halaman
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let tt;
 function toast(msg, ok) { const t = $('toast'); t.textContent = msg; t.className = (ok ? 'ok' : 'err') + ' show'; clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 4500); }
@@ -234,7 +294,7 @@ function fitSub() {
   const ls = parseFloat(getComputedStyle(s).letterSpacing) || 0, cur = s.offsetWidth - ls;
   if (cur > 0 && h.offsetWidth > 0) s.style.fontSize = (20 * h.offsetWidth / cur) + 'px';
 }
-let monLoaded = false;
+let monLoaded = false, picsLoaded = false;
 function show(tab) {
   const mon = tab === 'mon';
   $('vIn').classList.toggle('on', !mon); $('vMon').classList.toggle('on', mon);
@@ -242,6 +302,7 @@ function show(tab) {
   $('wrap').classList.toggle('wide', mon);
   history.replaceState(null, '', mon ? '#monitoring' : '#input');
   if (mon && !monLoaded) loadMon();
+  if (mon && !picsLoaded) loadPics();
 }
 $('tabIn').onclick = () => show('in');
 $('tabMon').onclick = () => show('mon');
@@ -384,7 +445,7 @@ $('f').addEventListener('submit', async e => {
       body: JSON.stringify({ key: SECRET, tanggal: todayISO(), nama, invoice, pengiriman: $('pengiriman').value, koli: $('koli').value, fotos }) });
     const r = await resp.json();
     if (r.status !== 'success') throw new Error(r.message);
-    localStorage.setItem('pic', nama); monLoaded = false;
+    localStorage.setItem('pic', nama); monLoaded = false; picsLoaded = false; CACHE.clear();
     toast('✅ Tersimpan! ID: ' + r.id + ' (baris ' + r.row + ')', true);
     $('invoice').value = ''; $('koli').value = 1; $('pengiriman').value = '';
     boxes.forEach(b => { b.querySelector('img').removeAttribute('src'); b.classList.remove('has'); });
@@ -393,55 +454,163 @@ $('f').addEventListener('submit', async e => {
   finally { btn.disabled = false; $('btnTxt').textContent = 'SIMPAN DATA'; }
 });
 
-/* ---------- Monitoring ---------- */
-let DATA = [];
+/* ================= MONITORING (ringan: paging & filter di server) ================= */
+const PER = 30;
+let CUR = [], page = 1, pages = 1, reqCtl = null;
 const fileId = u => { const m = String(u).match(/\/d\/([^/?]+)/) || String(u).match(/[?&]id=([^&]+)/); return m ? m[1] : ''; };
 const thumb = (u, w) => 'https://drive.google.com/thumbnail?id=' + fileId(u) + '&sz=w' + w;
+const dlUrl = u => 'https://drive.google.com/uc?export=download&id=' + fileId(u);
 const tglID = iso => { const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? m[3] + '/' + m[2] + '/' + m[1] : iso; };
-
 const cleanPic = s => String(s || '').replace(/^\s*PACKING\s*ONLINE\s*:?\s*/i, '').trim().toUpperCase();
-let page = 1; const PER = 50;
-const emptyRow = (t, c) => '<tr><td colspan="7" class="msg ' + (c || '') + '">' + t + '</td></tr>';
-async function loadMon() {
-  $('list').innerHTML = emptyRow('Memuat data...');
+const emptyRow = (t, c) => '<tr><td colspan="8" class="msg ' + (c || '') + '">' + t + '</td></tr>';
+
+// opsi pengiriman: salin dari form input
+const kurirOpts = [...$('pengiriman').options].filter(o => o.value);
+$('kurir').innerHTML = '<option value="">Semua pengiriman</option>' + kurirOpts.map(o => '<option value="' + esc(o.value) + '">' + esc(o.value) + '</option>').join('');
+$('ePeng').innerHTML = '<option value="">-</option>' + kurirOpts.map(o => '<option value="' + esc(o.value) + '">' + esc(o.value) + '</option>').join('');
+
+const filters = () => ({ tgl: $('tgl').value, pic: $('pic').value.trim().toUpperCase(), kurir: $('kurir').value, q: $('q').value.trim().toUpperCase() });
+
+async function loadPics() {
+  picsLoaded = true;
   try {
-    const r = await fetch(API_URL + '?action=list&key=' + encodeURIComponent(SECRET));
+    const r = await fetch(API_URL + '?action=meta&key=' + encodeURIComponent(SECRET));
+    const j = await r.json();
+    if (j.status === 'success') $('picList').innerHTML = j.pics.map(n => '<option value="' + esc(n) + '"></option>').join('');
+  } catch (e) { picsLoaded = false; }
+}
+
+async function loadMon(force) {
+  const qs = new URLSearchParams({ action: 'list', key: SECRET, page, per: PER, ...filters() }).toString();
+  if (!force && CACHE.has(qs)) { applyData(CACHE.get(qs)); return; }
+  if (reqCtl) reqCtl.abort();
+  reqCtl = new AbortController();
+  const wrap = $('tbwrap');
+  if (CUR.length) wrap.classList.add('busy'); else $('list').innerHTML = emptyRow('Memuat data...');
+  try {
+    const r = await fetch(API_URL + '?' + qs, { signal: reqCtl.signal });
     const j = await r.json();
     if (j.status !== 'success') throw new Error(j.message || 'Respon API tidak valid');
-    DATA = j.data.map(d => ({ ...d, pic: cleanPic(d.pic) })).reverse(); monLoaded = true;
-    const names = [...new Set(DATA.map(d => d.pic).filter(Boolean))].sort();
-    $('picList').innerHTML = names.map(n => '<option value="' + esc(n) + '"></option>').join('');
-    const cur = $('kurir').value, ks = [...new Set(DATA.map(d => d.pengiriman).filter(Boolean))].sort();
-    $('kurir').innerHTML = '<option value="">Semua pengiriman</option>' + ks.map(v => '<option>' + esc(v) + '</option>').join('');
-    $('kurir').value = ks.includes(cur) ? cur : '';
-    page = 1; renderMon();
-  } catch (e) { $('list').innerHTML = emptyRow('Gagal memuat data: ' + esc(e.message), 'err'); }
+    CACHE.set(qs, j); if (CACHE.size > 40) CACHE.delete(CACHE.keys().next().value);
+    monLoaded = true; applyData(j);
+  } catch (e) {
+    if (e.name === 'AbortError') return;
+    wrap.classList.remove('busy');
+    $('list').innerHTML = emptyRow('Gagal memuat data: ' + esc(e.message), 'err');
+  }
 }
-function renderMon() {
-  const t = $('tgl').value, p = $('pic').value.trim().toUpperCase(), k = $('kurir').value, q = $('q').value.trim().toUpperCase();
-  const rows = DATA.filter(d => (!t || d.tanggal === t) && (!p || d.pic.includes(p)) && (!k || d.pengiriman === k) && (!q || String(d.invoice).toUpperCase().includes(q)));
-  $('stats').innerHTML = '<span>Data: <b>' + rows.length + '</b> dari ' + DATA.length + '</span><span>Total koli: <b>' + rows.reduce((a, d) => a + (d.koli || 0), 0) + '</b></span><span>Total foto: <b>' + rows.reduce((a, d) => a + d.fotos.length, 0) + '</b></span>';
-  const pages = Math.max(1, Math.ceil(rows.length / PER));
-  page = Math.min(Math.max(1, page), pages);
-  if (!rows.length) { $('list').innerHTML = emptyRow('Tidak ada data untuk filter ini. Tekan "Tampilkan semua" untuk melihat semua data.'); $('pager').innerHTML = ''; return; }
+
+function applyData(j) {
+  CUR = j.rows.map(d => ({ ...d, pic: cleanPic(d.pic) }));
+  page = j.page; pages = j.pages;
+  $('tbwrap').classList.remove('busy');
+  $('stats').innerHTML = '<span>Data: <b>' + j.total.toLocaleString('id-ID') + '</b></span><span>Total koli: <b>' + j.totalKoli.toLocaleString('id-ID') + '</b></span>';
+  renderTable(j.total);
   const from = (page - 1) * PER;
-  $('list').innerHTML = rows.slice(from, from + PER).map((d, i) => {
-    const ph = d.fotos.length ? d.fotos.map(u => '<a href="' + esc(u) + '" data-big="' + esc(thumb(u, 1200)) + '"><img loading="lazy" src="' + esc(thumb(u, 200)) + '" alt="Foto ' + esc(d.invoice) + '"></a>').join('') : '<span class="none">Tidak ada foto</span>';
-    return '<tr><td class="no">' + (from + i + 1) + '</td><td data-l="Tanggal">' + esc(tglID(d.tanggal)) + '</td><td class="inv">' + esc(d.invoice) + '</td><td data-l="PIC">' + esc(d.pic || '-') +
-      '</td><td data-l="Pengiriman">' + esc(d.pengiriman || '-') + '</td><td class="kl" data-l="Koli">' + (d.koli || 0) + '</td><td><div class="ph">' + ph + '</div></td></tr>';
-  }).join('');
-  $('pager').innerHTML = '<span>Baris ' + (from + 1) + ' sampai ' + Math.min(from + PER, rows.length) + ' dari ' + rows.length + '</span><span><button type="button" data-p="-1"' + (page <= 1 ? ' disabled' : '') + '>Sebelumnya</button> &nbsp;Halaman <b>' + page + '</b> dari ' + pages + '&nbsp; <button type="button" data-p="1"' + (page >= pages ? ' disabled' : '') + '>Berikutnya</button></span>';
+  $('pager').innerHTML = j.total
+    ? '<span>Baris ' + (from + 1) + ' sampai ' + Math.min(from + PER, j.total) + ' dari ' + j.total.toLocaleString('id-ID') + '</span><span><button type="button" data-p="-1"' + (page <= 1 ? ' disabled' : '') + '>Sebelumnya</button> &nbsp;Halaman <b>' + page + '</b> dari ' + pages + '&nbsp; <button type="button" data-p="1"' + (page >= pages ? ' disabled' : '') + '>Berikutnya</button></span>'
+    : '';
 }
-const refilter = () => { page = 1; renderMon(); };
+
+function renderTable(total) {
+  if (!CUR.length) { $('list').innerHTML = emptyRow('Tidak ada data untuk filter ini. Tekan "Tampilkan semua" untuk melihat semua data.'); return; }
+  const from = (page - 1) * PER;
+  $('list').innerHTML = CUR.map((d, i) => {
+    const ph = d.fotos.length
+      ? d.fotos.map((u, k) => '<a data-r="' + i + '" data-k="' + k + '"><img loading="lazy" decoding="async" src="' + esc(thumb(u, 160)) + '" alt="Foto ' + esc(d.invoice) + '"></a>').join('')
+      : '<span class="none">Tidak ada foto</span>';
+    return '<tr><td class="no">' + (from + i + 1) + '</td><td data-l="Tanggal">' + esc(tglID(d.tanggal)) + '</td><td class="inv">' + esc(d.invoice) + '</td><td data-l="PIC">' + esc(d.pic || '-') +
+      '</td><td data-l="Pengiriman">' + esc(d.pengiriman || '-') + '</td><td class="kl" data-l="Koli">' + (d.koli || 0) + '</td><td><div class="ph">' + ph + '</div></td>' +
+      '<td class="ak"><button type="button" class="ebtn" data-e="' + i + '">✏️ Edit</button></td></tr>';
+  }).join('');
+}
+
+const deb = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+const refilter = () => { page = 1; loadMon(); };
 ['tgl', 'kurir'].forEach(id => $(id).addEventListener('change', refilter));
-$('pic').addEventListener('input', refilter);
+$('pic').addEventListener('input', deb(refilter, 450));
 $('pic').addEventListener('focus', e => e.target.select());
-$('q').addEventListener('input', refilter);
+$('q').addEventListener('input', deb(refilter, 450));
 $('reset').onclick = () => { $('tgl').value = ''; $('pic').value = ''; $('kurir').value = ''; $('q').value = ''; refilter(); };
-$('reload').onclick = loadMon;
-$('pager').addEventListener('click', e => { const b = e.target.closest('button[data-p]'); if (!b) return; page += +b.dataset.p; renderMon(); $('list').closest('.tbwrap').scrollTop = 0; });
-$('list').addEventListener('click', e => { const a = e.target.closest('a[data-big]'); if (!a) return; e.preventDefault(); $('lb').querySelector('img').src = a.dataset.big; $('lb').classList.add('open'); });
-$('lb').onclick = () => $('lb').classList.remove('open');
+$('reload').onclick = () => { CACHE.clear(); picsLoaded = false; loadPics(); loadMon(true); };
+$('pager').addEventListener('click', e => { const b = e.target.closest('button[data-p]'); if (!b) return; page += +b.dataset.p; loadMon(); $('tbwrap').scrollTop = 0; });
+
+/* ---------- Galeri foto (geser + unduh) ---------- */
+let LB = { urls: [], i: 0, title: '' };
+const lbImg = $('lbImg');
+function lbShow() {
+  const n = LB.urls.length, u = LB.urls[LB.i];
+  $('lbTitle').textContent = LB.title + (n > 1 ? '  ·  ' + (LB.i + 1) + '/' + n : '');
+  $('lbDl').href = dlUrl(u);
+  lbImg.classList.add('ld');
+  const big = thumb(u, 1600), pre = new Image();
+  pre.onload = () => { if (LB.urls[LB.i] === u) { lbImg.src = big; lbImg.classList.remove('ld'); } };
+  pre.onerror = () => { lbImg.src = big; lbImg.classList.remove('ld'); };
+  pre.src = big;
+  $('lbPrev').classList.toggle('hide', n < 2); $('lbNext').classList.toggle('hide', n < 2);
+  $('lbPrev').disabled = LB.i === 0; $('lbNext').disabled = LB.i === n - 1;
+  $('lbDots').innerHTML = n > 1 ? LB.urls.map((_, k) => '<i class="' + (k === LB.i ? 'on' : '') + '"></i>').join('') : '';
+  // muat foto sebelah lebih awal supaya geser terasa cepat
+  [LB.i - 1, LB.i + 1].forEach(k => { if (LB.urls[k]) new Image().src = thumb(LB.urls[k], 1600); });
+}
+function lbOpen(r, k) { const d = CUR[r]; if (!d || !d.fotos.length) return; LB = { urls: d.fotos, i: k, title: d.invoice }; $('lb').classList.add('open'); lbShow(); }
+function lbClose() { $('lb').classList.remove('open'); lbImg.removeAttribute('src'); }
+function lbGo(dir) { const j = LB.i + dir; if (j < 0 || j >= LB.urls.length) return; LB.i = j; lbShow(); }
+$('list').addEventListener('click', e => {
+  const a = e.target.closest('a[data-r]'); if (a) { lbOpen(+a.dataset.r, +a.dataset.k); return; }
+  const b = e.target.closest('button[data-e]'); if (b) openEdit(+b.dataset.e);
+});
+$('lbPrev').onclick = () => lbGo(-1);
+$('lbNext').onclick = () => lbGo(1);
+$('lbClose').onclick = lbClose;
+$('lbStage').addEventListener('click', e => { if (e.target.id === 'lbStage') lbClose(); });
+document.addEventListener('keydown', e => {
+  if ($('lb').classList.contains('open')) { if (e.key === 'ArrowLeft') lbGo(-1); else if (e.key === 'ArrowRight') lbGo(1); else if (e.key === 'Escape') lbClose(); }
+  else if ($('ed').classList.contains('open') && e.key === 'Escape') $('ed').classList.remove('open');
+});
+// geser jari (swipe)
+let sx = 0, sy = 0;
+$('lb').addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+$('lb').addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+  if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) lbGo(dx < 0 ? 1 : -1);
+}, { passive: true });
+
+/* ---------- Edit data ---------- */
+let EDIT = -1;
+function openEdit(i) {
+  const d = CUR[i]; if (!d) return;
+  EDIT = i;
+  $('eMeta').textContent = tglID(d.tanggal) + ' · PIC: ' + (d.pic || '-');
+  $('eInv').value = d.invoice;
+  const sel = $('ePeng');
+  if (d.pengiriman && ![...sel.options].some(o => o.value === d.pengiriman)) sel.insertAdjacentHTML('beforeend', '<option value="' + esc(d.pengiriman) + '">' + esc(d.pengiriman) + '</option>');
+  sel.value = d.pengiriman || '';
+  $('eKoli').value = d.koli || 1;
+  $('ed').classList.add('open');
+  setTimeout(() => $('eInv').focus(), 50);
+}
+$('eInv').addEventListener('input', e => e.target.value = e.target.value.toUpperCase().replace(/\s+/g, ''));
+$('eCancel').onclick = () => $('ed').classList.remove('open');
+$('ed').addEventListener('click', e => { if (e.target.id === 'ed') $('ed').classList.remove('open'); });
+$('eSave').onclick = async () => {
+  const d = CUR[EDIT]; if (!d) return;
+  const invoice = $('eInv').value.trim(), pengiriman = $('ePeng').value, koli = Math.max(1, +$('eKoli').value || 1);
+  if (!invoice) return toast('Invoice tidak boleh kosong', false);
+  const b = $('eSave'); b.disabled = true; b.textContent = 'Menyimpan...';
+  try {
+    const resp = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ key: SECRET, action: 'update', id: d.id, row: d.row, invoice, pengiriman, koli }) });
+    const r = await resp.json();
+    if (r.status !== 'success') throw new Error(r.message);
+    d.invoice = r.invoice; d.pengiriman = pengiriman; d.koli = koli; d.row = r.row;
+    CACHE.clear();
+    $('ed').classList.remove('open');
+    renderTable();
+    toast('✅ Data berhasil diubah', true);
+  } catch (err) { toast('❌ Gagal: ' + err.message, false); }
+  finally { b.disabled = false; b.textContent = 'Simpan'; }
+};
 
 if (location.hash === '#monitoring') show('mon');
 </script>
