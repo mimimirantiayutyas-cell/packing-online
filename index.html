@@ -42,7 +42,6 @@ h1{margin:0;display:inline-block;white-space:nowrap;font-size:clamp(17px,5.4vw,2
 body.in #app{display:block}
 body.in #vLogin{display:none}
 .lt{margin:0 0 4px;font-size:20px;font-weight:800}
-.ls{margin:0 0 6px;font-size:13px;color:var(--mut)}
 .lerr{min-height:18px;margin:10px 2px 0;font-size:13px;font-weight:700;color:var(--red)}
 .ubar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 4px 12px;font-size:13px;font-weight:700}
 .ubar span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -192,22 +191,25 @@ td.no{color:var(--mut);width:56px}td.inv{font-weight:800;word-break:break-all}td
     <div class="titlebox"><h1>Packing Online</h1><div class="sub">AZ·KO SIDOARJO</div></div>
   </div>
 
-  <!-- ===== LOGIN ===== -->
+  <!-- ===== LOGIN (2 langkah: NIP lalu Enter, nama muncul, ketik password) ===== -->
   <div id="vLogin"><div class="card">
     <h2 class="lt">Masuk</h2>
-    <p class="ls">Isi NIP, nama, dan password dari admin.</p>
     <form id="lf" autocomplete="on">
       <label for="lNip" style="margin-top:14px">NIP</label>
-      <input id="lNip" name="username" inputmode="numeric" autocomplete="username" placeholder="Contoh: 115198" required>
-      <label for="lNama">Nama</label>
-      <input id="lNama" autocomplete="off" autocapitalize="characters" placeholder="Nama sesuai data" required>
-      <label for="lPass">Password</label>
-      <div class="field">
-        <input id="lPass" name="password" type="password" autocomplete="current-password" placeholder="Password" required>
-        <button type="button" class="ib blue" id="lEye" aria-label="Tampilkan password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      <input id="lNip" name="username" inputmode="numeric" enterkeyhint="go" autocomplete="username" required>
+
+      <div id="lStep2" style="display:none">
+        <label for="lNama">Nama</label>
+        <input id="lNama" readonly tabindex="-1">
+        <label for="lPass">Password</label>
+        <div class="field">
+          <input id="lPass" name="password" type="password" enterkeyhint="go" autocomplete="current-password">
+          <button type="button" class="ib blue" id="lEye" aria-label="Tampilkan password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
       </div>
+
       <div class="lerr" id="lErr" role="alert"></div>
-      <button class="save" id="lBtn" type="submit" style="margin-top:14px"><span class="spin"></span><span id="lTxt">MASUK</span></button>
+      <button class="save" id="lBtn" type="submit" style="margin-top:14px"><span class="spin"></span><span id="lTxt">LANJUT</span></button>
     </form>
   </div></div>
 
@@ -375,23 +377,49 @@ async function api(body) {
   return j;
 }
 
+/* ---------- Login 2 langkah ---------- */
+let stepNip = '';   // NIP yang sudah dikenali (langkah 2 aktif)
+async function postRaw(body) {
+  const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
+  const j = await r.json();
+  if (j.status !== 'success') throw new Error(j.message || 'Gagal');
+  return j;
+}
+function resetLogin() {
+  stepNip = ''; $('lStep2').style.display = 'none';
+  $('lNama').value = ''; $('lPass').value = ''; $('lPass').type = 'password';
+  $('lTxt').textContent = 'LANJUT';
+}
 $('lEye').onclick = () => { const p = $('lPass'); p.type = p.type === 'password' ? 'text' : 'password'; };
-$('lNama').addEventListener('input', e => e.target.value = e.target.value.toUpperCase());
+$('lNip').addEventListener('input', () => { if (stepNip) resetLogin(); $('lErr').textContent = ''; });
+
 $('lf').addEventListener('submit', async e => {
   e.preventDefault();
-  const b = $('lBtn'); $('lErr').textContent = '';
-  b.disabled = true; $('lTxt').textContent = 'MEMERIKSA...';
+  const nip = $('lNip').value.trim();
+  if (!nip) return;
+  const b = $('lBtn'); $('lErr').textContent = ''; b.disabled = true;
   try {
-    const resp = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'login', nip: $('lNip').value.trim(), nama: $('lNama').value.trim(), password: $('lPass').value }) });
-    const j = await resp.json();
-    if (j.status !== 'success') throw new Error(j.message || 'Gagal masuk');
-    S = { token: j.token, nip: j.nip, nama: j.nama, role: j.role, exp: j.exp };
-    lsSet('sess', S); $('lPass').value = '';
-    enterApp();
+    if (!stepNip) {                                   // langkah 1: cari nama dari NIP
+      $('lTxt').textContent = 'MENCARI...';
+      const j = await postRaw({ action: 'lookup', nip });
+      stepNip = nip; $('lNama').value = j.nama;
+      $('lStep2').style.display = '';
+      $('lPass').focus();
+    } else {                                          // langkah 2: login
+      const pass = $('lPass').value;
+      if (!pass) { $('lErr').textContent = 'Password wajib diisi'; $('lPass').focus(); return; }
+      $('lTxt').textContent = 'MEMERIKSA...';
+      const j = await postRaw({ action: 'login', nip: stepNip, password: pass });
+      S = { token: j.token, nip: j.nip, nama: j.nama, role: j.role, exp: j.exp };
+      lsSet('sess', S); resetLogin(); $('lNip').value = '';
+      enterApp();
+    }
   } catch (err) {
     $('lErr').textContent = err instanceof SyntaxError || err.name === 'TypeError' ? 'Tidak bisa terhubung ke server. Cek internet.' : err.message;
-  } finally { b.disabled = false; $('lTxt').textContent = 'MASUK'; }
+    if (stepNip) { $('lPass').value = ''; $('lPass').focus(); }
+  } finally {
+    b.disabled = false; $('lTxt').textContent = stepNip ? 'MASUK' : 'LANJUT';
+  }
 });
 
 function enterApp() {
@@ -408,6 +436,7 @@ function logout(msg) {
   S = null; lsDel('sess'); lsDel('mon0');
   Q.length = 0; CACHE.clear(); CUR = []; monLoaded = false; picsLoaded = false; wantKey = '';
   if (reqCtl) reqCtl.abort();
+  resetLogin(); $('lNip').value = '';
   document.body.classList.remove('in'); $('wrap').classList.remove('wide');
   $('lErr').textContent = typeof msg === 'string' ? msg : '';
   history.replaceState(null, '', location.pathname);
