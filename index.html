@@ -5,14 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
 <title>Packing Online AZ·KO</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://drive.google.com">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f4f7fa;--txt:#14213d;--mut:#6b7a90;--line:#dfe6ee;--field:#f3f6fa;--red:#e0112b}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;min-height:100%}
 body{font-family:'Inter',system-ui,Arial,sans-serif;color:var(--txt);background:var(--bg);padding:18px 14px calc(30px + env(safe-area-inset-bottom));overflow-x:hidden}
 .wrap{max-width:560px;margin:auto;transition:max-width .2s}
-.wrap.wide{max-width:1600px}.wrap.wide .head{margin-bottom:8px}.wrap.wide .tabs{max-width:420px}
+.wrap.wide{max-width:1600px}.wrap.wide .head{margin-bottom:8px}.wrap.wide .tabs{max-width:520px}
+.wrap.wide .cube{animation-play-state:paused}
 .card{background:#fff;border:1px solid #e6edf3;border-radius:26px;padding:22px 20px 24px;box-shadow:0 30px 60px -22px rgba(20,33,61,.30),0 8px 20px -10px rgba(20,33,61,.12)}
 
 /* header */
@@ -32,9 +37,19 @@ h1{margin:0;display:inline-block;white-space:nowrap;font-size:clamp(17px,5.4vw,2
 .sub{display:inline-block;white-space:nowrap;line-height:1;margin-top:6px;font-size:15px;font-weight:900;letter-spacing:.12em;color:var(--red);
  text-shadow:.06em .06em 0 #a30c1f,.12em .12em .18em rgba(0,0,0,.25)}
 
+/* login & sesi */
+#app{display:none}
+body.in #app{display:block}
+body.in #vLogin{display:none}
+.lt{margin:0 0 4px;font-size:20px;font-weight:800}
+.ls{margin:0 0 6px;font-size:13px;color:var(--mut)}
+.lerr{min-height:18px;margin:10px 2px 0;font-size:13px;font-weight:700;color:var(--red)}
+.ubar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 4px 12px;font-size:13px;font-weight:700}
+.ubar span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
 /* tab */
-.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#e6edf3;padding:5px;border-radius:16px;margin-bottom:14px}
-.tabs button{border:0;border-radius:12px;padding:12px;font:800 14px 'Inter',sans-serif;color:var(--mut);background:transparent;cursor:pointer}
+.tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;background:#e6edf3;padding:5px;border-radius:16px;margin-bottom:14px}
+.tabs button{border:0;border-radius:12px;padding:12px 6px;font:800 14px 'Inter',sans-serif;color:var(--mut);background:transparent;cursor:pointer}
 .tabs button.on{background:#fff;color:var(--txt);box-shadow:0 3px 8px rgba(20,33,61,.12)}
 .view{display:none}.view.on{display:block}
 
@@ -47,8 +62,9 @@ label{display:block;font-size:11.5px;font-weight:700;letter-spacing:.8px;text-tr
 .field{display:flex;gap:8px}
 input,select{width:100%;padding:14px 15px;font:600 15.5px 'Inter',sans-serif;color:var(--txt);background:var(--field);border:1px solid var(--line);border-radius:14px;outline:none;
  box-shadow:inset 0 3px 7px rgba(20,33,61,.08);appearance:none;-webkit-appearance:none}
-input::placeholder{color:#9aa8bb;font-weight:500}
+input::placeholder{color:#9aa8bb;font-weight:600}
 input:focus,select:focus{border-color:#10c88a;box-shadow:inset 0 3px 7px rgba(20,33,61,.08),0 0 0 4px rgba(16,224,160,.2)}
+input[readonly]{background:#e9eef4;color:#41536f}
 select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%236b7a90' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
  background-repeat:no-repeat;background-position:right 15px center;padding-right:38px}
 .ib{flex:none;width:50px;border:0;border-radius:14px;cursor:pointer;color:#06231b;display:grid;place-items:center;background:linear-gradient(180deg,#3cf0b8,#10c88a);
@@ -87,6 +103,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .spin{width:18px;height:18px;border:3px solid rgba(4,35,26,.3);border-top-color:#04231a;border-radius:50%;animation:r .7s linear infinite;display:none}
 .save:disabled .spin{display:block}
 @keyframes r{to{transform:rotate(360deg)}}
+.qchip{min-height:18px;margin:12px 2px 0;font-size:12.5px;font-weight:700;color:#0a6fb8;text-align:center}
 #toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translate(-50%,120px);max-width:92vw;padding:14px 20px;border-radius:14px;font-weight:700;font-size:14px;z-index:120;box-shadow:0 14px 34px rgba(20,33,61,.35);transition:transform .35s cubic-bezier(.2,1.2,.4,1)}
 #toast.show{transform:translate(-50%,0)}#toast.ok{background:#10c88a;color:#032a1e}#toast.err{background:#ff4560;color:#fff}
 #scan{position:fixed;inset:0;z-index:50;background:rgba(3,7,16,.92);display:none;flex-direction:column;align-items:center;justify-content:center;padding:18px}
@@ -107,13 +124,14 @@ thead th{position:sticky;top:0;z-index:1;background:#eef3f8;text-align:left;font
 tbody td{padding:8px 14px;border-bottom:1px solid #edf1f6;vertical-align:middle}
 tbody tr:hover{background:#f7fafd}
 td.no{color:var(--mut);width:56px}td.inv{font-weight:800;word-break:break-all}td.kl{font-weight:700}
-.ph{display:flex;gap:6px;flex-wrap:wrap}
-.ph a{display:block;width:72px;height:54px;border-radius:8px;overflow:hidden;background:#e9eef4;border:1px solid var(--line);cursor:pointer}
+.ph a{position:relative;display:block;width:72px;height:54px;border-radius:8px;overflow:hidden;background:#e9eef4;border:1px solid var(--line);cursor:pointer}
 .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph .cnt{position:absolute;right:3px;bottom:3px;font-size:11px;font-weight:800;color:#fff;background:rgba(0,0,0,.62);padding:1px 6px;border-radius:999px}
 .none{font-size:12px;color:#a0adbf}
 .msg{padding:40px 10px;text-align:center;color:var(--mut)}.msg.err{color:var(--red)}
 .ebtn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;font:700 13px 'Inter',sans-serif;color:var(--txt);cursor:pointer;white-space:nowrap}
-.ebtn:hover{background:#eef3f8}
+.ebtn:hover{background:#eef3f8}.ebtn:disabled{opacity:.5;cursor:wait}
+.ebtn.dng{color:#b02338}
 .pager{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;font-size:13px;color:var(--mut)}
 .pager button{padding:9px 16px;border:1px solid var(--line);border-radius:10px;background:#fff;font:700 13px 'Inter',sans-serif;color:var(--txt);cursor:pointer}
 .pager button:disabled{opacity:.4;cursor:default}
@@ -126,6 +144,14 @@ td.no{color:var(--mut);width:56px}td.inv{font-weight:800;word-break:break-all}td
  td[data-l]::before{content:attr(data-l) ": ";color:var(--mut);font-size:12px}
  td.ak{padding-top:8px}
 }
+
+/* pengguna (admin) */
+.card h3{margin:0 0 4px;font-size:16px}
+.urow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid #edf1f6}
+.urow:last-child{border-bottom:0}
+.urow.off .ui{opacity:.5}
+.urow .meta{font-size:12px;color:var(--mut);margin-top:2px}
+.uact{display:flex;gap:6px;flex-wrap:wrap}
 
 /* lightbox galeri */
 #lb{position:fixed;inset:0;background:rgba(3,7,16,.94);display:none;z-index:95;flex-direction:column;touch-action:pan-y}
@@ -166,76 +192,118 @@ td.no{color:var(--mut);width:56px}td.inv{font-weight:800;word-break:break-all}td
     <div class="titlebox"><h1>Packing Online</h1><div class="sub">AZ·KO SIDOARJO</div></div>
   </div>
 
-  <div class="tabs" role="tablist">
-    <button type="button" id="tabIn" class="on" role="tab">Input Data</button>
-    <button type="button" id="tabMon" role="tab">Monitoring</button>
-  </div>
-
-  <!-- ===== INPUT ===== -->
-  <div class="view on" id="vIn"><div class="card">
-    <label style="margin-top:0">Tanggal</label>
-    <div class="datebox">
-      <div><div class="d" id="dTxt">-</div><div class="t" id="tTxt">-</div></div>
-      <div class="lock"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>OTOMATIS</div>
-    </div>
-
-    <form id="f" autocomplete="off">
-      <label for="nama">Nama PIC</label>
+  <!-- ===== LOGIN ===== -->
+  <div id="vLogin"><div class="card">
+    <h2 class="lt">Masuk</h2>
+    <p class="ls">Isi NIP, nama, dan password dari admin.</p>
+    <form id="lf" autocomplete="on">
+      <label for="lNip" style="margin-top:14px">NIP</label>
+      <input id="lNip" name="username" inputmode="numeric" autocomplete="username" placeholder="Contoh: 115198" required>
+      <label for="lNama">Nama</label>
+      <input id="lNama" autocomplete="off" autocapitalize="characters" placeholder="Nama sesuai data" required>
+      <label for="lPass">Password</label>
       <div class="field">
-        <input id="nama" placeholder="Ketik nama PIC atau tekan mic" required autocapitalize="characters">
-        <button type="button" class="ib" id="micNama" aria-label="Rekam suara nama PIC"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg></button>
+        <input id="lPass" name="password" type="password" autocomplete="current-password" placeholder="Password" required>
+        <button type="button" class="ib blue" id="lEye" aria-label="Tampilkan password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
       </div>
-      <div class="hint" id="hNama"></div>
-
-      <label for="invoice">No. Invoice</label>
-      <div class="field">
-        <input id="invoice" placeholder="INV123456789" required autocapitalize="characters">
-        <button type="button" class="ib blue" id="btnScan" aria-label="Scan barcode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 8v8M11 8v8M15 8v8M18 8v8"/></svg></button>
-        <button type="button" class="ib" id="micInv" aria-label="Rekam suara invoice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg></button>
-      </div>
-      <div class="hint" id="hInv"></div>
-
-      <div class="row">
-        <div>
-          <label for="pengiriman">Pengiriman</label>
-          <select id="pengiriman">
-            <option value="">-- Pilih --</option>
-            <option>JNE</option><option>SPX</option><option>SPX INSTAN</option>
-            <option>J&amp;T</option><option>J N T EXPRESS</option><option>JNT CARGO</option>
-            <option>SICEPAT</option><option>ANTERAJA</option><option>GOSEND</option>
-            <option>GRAB</option><option>BLUEBIRD</option>
-          </select>
-        </div>
-        <div>
-          <label for="koli">Jumlah Koli</label>
-          <div class="stepper">
-            <button type="button" class="sb" id="min">−</button>
-            <input type="number" id="koli" min="1" value="1" inputmode="numeric">
-            <button type="button" class="sb" id="plus">+</button>
-          </div>
-        </div>
-      </div>
-
-      <label>Foto (maks 4)</label>
-      <div class="fotos" id="fotos"></div>
-
-      <button class="save" id="btn" type="submit"><span class="spin"></span><span id="btnTxt">SIMPAN DATA</span></button>
+      <div class="lerr" id="lErr" role="alert"></div>
+      <button class="save" id="lBtn" type="submit" style="margin-top:14px"><span class="spin"></span><span id="lTxt">MASUK</span></button>
     </form>
   </div></div>
 
-  <!-- ===== MONITORING ===== -->
-  <div class="view" id="vMon">
-    <div class="bar">
-      <input type="date" id="tgl" aria-label="Filter tanggal">
-      <input id="pic" list="picList" placeholder="Semua PIC (ketik nama)" aria-label="Filter PIC" autocomplete="off"><datalist id="picList"></datalist>
-      <select id="kurir" aria-label="Filter pengiriman"><option value="">Semua pengiriman</option></select>
-      <input type="search" id="q" placeholder="Cari invoice" aria-label="Cari invoice">
-      <button id="reset" type="button">Tampilkan semua</button>
-      <button id="reload" type="button" style="background:#2a8fe6">Muat ulang</button>
+  <!-- ===== APLIKASI ===== -->
+  <div id="app">
+    <div class="ubar"><span id="uInfo"></span><button type="button" class="ebtn" id="logout">Keluar</button></div>
+
+    <div class="tabs" role="tablist">
+      <button type="button" id="tabIn" class="on" role="tab">Input Data</button>
+      <button type="button" id="tabMon" role="tab">Monitoring</button>
+      <button type="button" id="tabUsr" role="tab" style="display:none">Pengguna</button>
     </div>
-    <div class="stats" id="stats"></div>
-    <div class="tbwrap" id="tbwrap"><table><thead><tr><th>No</th><th>Tanggal</th><th>Invoice</th><th>PIC</th><th>Pengiriman</th><th>Koli</th><th>Foto</th><th>Aksi</th></tr></thead><tbody id="list"></tbody></table></div>
-    <div class="pager" id="pager"></div>
+
+    <!-- ===== INPUT ===== -->
+    <div class="view on" id="vIn"><div class="card">
+      <label style="margin-top:0">Tanggal</label>
+      <div class="datebox">
+        <div><div class="d" id="dTxt">-</div><div class="t" id="tTxt">-</div></div>
+        <div class="lock"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>OTOMATIS</div>
+      </div>
+
+      <form id="f" autocomplete="off">
+        <label for="nama">Nama PIC</label>
+        <div class="field">
+          <input id="nama" placeholder="Nama PIC" required autocapitalize="characters" readonly>
+          <button type="button" class="ib" id="micNama" aria-label="Rekam suara nama PIC" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg></button>
+        </div>
+        <div class="hint" id="hNama"></div>
+
+        <label for="invoice">No. Invoice</label>
+        <div class="field">
+          <input id="invoice" placeholder="INV123456789" required autocapitalize="characters">
+          <button type="button" class="ib blue" id="btnScan" aria-label="Scan barcode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 8v8M11 8v8M15 8v8M18 8v8"/></svg></button>
+          <button type="button" class="ib" id="micInv" aria-label="Rekam suara invoice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg></button>
+        </div>
+        <div class="hint" id="hInv"></div>
+
+        <div class="row">
+          <div>
+            <label for="pengiriman">Pengiriman</label>
+            <select id="pengiriman">
+              <option value="">-- Pilih --</option>
+              <option>JNE</option><option>SPX</option><option>SPX INSTAN</option>
+              <option>J&amp;T</option><option>J N T EXPRESS</option><option>JNT CARGO</option>
+              <option>SICEPAT</option><option>ANTERAJA</option><option>GOSEND</option>
+              <option>GRAB</option><option>BLUEBIRD</option>
+            </select>
+          </div>
+          <div>
+            <label for="koli">Jumlah Koli</label>
+            <div class="stepper">
+              <button type="button" class="sb" id="min">−</button>
+              <input type="number" id="koli" min="1" value="1" inputmode="numeric">
+              <button type="button" class="sb" id="plus">+</button>
+            </div>
+          </div>
+        </div>
+
+        <label>Foto (maks 4)</label>
+        <div class="fotos" id="fotos"></div>
+
+        <button class="save" id="btn" type="submit"><span id="btnTxt">SIMPAN DATA</span></button>
+        <div class="qchip" id="qchip" aria-live="polite"></div>
+      </form>
+    </div></div>
+
+    <!-- ===== MONITORING ===== -->
+    <div class="view" id="vMon">
+      <div class="bar">
+        <input type="date" id="tgl" aria-label="Filter tanggal">
+        <input id="pic" list="picList" placeholder="Semua PIC (ketik nama)" aria-label="Filter PIC" autocomplete="off"><datalist id="picList"></datalist>
+        <select id="kurir" aria-label="Filter pengiriman"><option value="">Semua pengiriman</option></select>
+        <input type="search" id="q" placeholder="Cari invoice" aria-label="Cari invoice">
+        <button id="reset" type="button">Tampilkan semua</button>
+        <button id="reload" type="button" style="background:#2a8fe6">Muat ulang</button>
+      </div>
+      <div class="stats" id="stats"></div>
+      <div class="tbwrap" id="tbwrap"><table><thead><tr><th>No</th><th>Tanggal</th><th>Invoice</th><th>PIC</th><th>Pengiriman</th><th>Koli</th><th>Foto</th><th>Aksi</th></tr></thead><tbody id="list"></tbody></table></div>
+      <div class="pager" id="pager"></div>
+    </div>
+
+    <!-- ===== PENGGUNA (ADMIN) ===== -->
+    <div class="view" id="vUsr"><div class="card">
+      <h3>Tambah pengguna</h3>
+      <form id="uf" autocomplete="off">
+        <div class="row">
+          <div><label for="uNip">NIP</label><input id="uNip" required placeholder="NIP"></div>
+          <div><label for="uRole">Peran</label><select id="uRole"><option value="staff">Petugas</option><option value="admin">Admin</option></select></div>
+        </div>
+        <label for="uNama">Nama</label><input id="uNama" required autocapitalize="characters" placeholder="Nama lengkap">
+        <label for="uPass">Password awal</label><input id="uPass" required minlength="6" placeholder="Minimal 6 karakter">
+        <button class="save" id="uBtn" type="submit" style="margin-top:18px;font-size:15px;padding:14px"><span class="spin"></span><span id="uTxt">TAMBAH PENGGUNA</span></button>
+      </form>
+      <h3 style="margin-top:26px">Daftar pengguna</h3>
+      <div id="uList"><div class="msg">Memuat...</div></div>
+    </div></div>
   </div>
 </div>
 
@@ -277,15 +345,75 @@ td.no{color:var(--mut);width:56px}td.inv{font-weight:800;word-break:break-all}td
 
 <script>
 // ====== KONFIGURASI ======
+// Setelah deploy "Versi baru" pada deployment yang sama, URL ini tetap sama.
 const API_URL = 'https://script.google.com/macros/s/AKfycbz_dwOslJTKQbqs8D_RtvxpOLIIFZfa_EvGaGHT4zKfyGKtck6SVqA-zo1FwnvYTjYwOQ/exec';
-const SECRET  = 'rahasia123';
 
 const $ = id => document.getElementById(id);
 const fotos = [null, null, null, null];
 const CACHE = new Map();      // cache hasil monitoring per filter+halaman
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const lsGet = k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+const lsDel = k => { try { localStorage.removeItem(k); } catch (e) {} };
 let tt;
 function toast(msg, ok) { const t = $('toast'); t.textContent = msg; t.className = (ok ? 'ok' : 'err') + ' show'; clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 4500); }
+
+/* ---------- Sesi & API ---------- */
+let S = lsGet('sess');
+if (S && (!S.token || S.exp < Date.now())) { S = null; lsDel('sess'); }
+
+async function api(body) {
+  if (!S) throw new Error('Belum masuk');
+  let j;
+  try {
+    const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ ...body, token: S.token }) });
+    j = await r.json();
+  } catch (e) { const er = new Error('Koneksi bermasalah, coba lagi'); er.retry = true; throw er; }
+  if (j.code === 'auth') { logout(j.message); throw new Error(j.message); }
+  if (j.status !== 'success') throw new Error(j.message || 'Gagal');
+  return j;
+}
+
+$('lEye').onclick = () => { const p = $('lPass'); p.type = p.type === 'password' ? 'text' : 'password'; };
+$('lNama').addEventListener('input', e => e.target.value = e.target.value.toUpperCase());
+$('lf').addEventListener('submit', async e => {
+  e.preventDefault();
+  const b = $('lBtn'); $('lErr').textContent = '';
+  b.disabled = true; $('lTxt').textContent = 'MEMERIKSA...';
+  try {
+    const resp = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'login', nip: $('lNip').value.trim(), nama: $('lNama').value.trim(), password: $('lPass').value }) });
+    const j = await resp.json();
+    if (j.status !== 'success') throw new Error(j.message || 'Gagal masuk');
+    S = { token: j.token, nip: j.nip, nama: j.nama, role: j.role, exp: j.exp };
+    lsSet('sess', S); $('lPass').value = '';
+    enterApp();
+  } catch (err) {
+    $('lErr').textContent = err instanceof SyntaxError || err.name === 'TypeError' ? 'Tidak bisa terhubung ke server. Cek internet.' : err.message;
+  } finally { b.disabled = false; $('lTxt').textContent = 'MASUK'; }
+});
+
+function enterApp() {
+  document.body.classList.add('in');
+  const admin = S.role === 'admin';
+  $('uInfo').textContent = '👤 ' + S.nama + ' · ' + (admin ? 'Admin' : 'Petugas');
+  $('tabUsr').style.display = admin ? '' : 'none';
+  $('nama').value = S.nama; $('nama').readOnly = !admin; $('micNama').style.display = admin ? '' : 'none';
+  show(location.hash === '#monitoring' ? 'mon' : 'in');
+  fitSub();
+  setTimeout(() => { if (S) loadMon(); }, 1500);   // siapkan data monitoring di latar belakang
+}
+function logout(msg) {
+  S = null; lsDel('sess'); lsDel('mon0');
+  Q.length = 0; CACHE.clear(); CUR = []; monLoaded = false; picsLoaded = false; wantKey = '';
+  if (reqCtl) reqCtl.abort();
+  document.body.classList.remove('in'); $('wrap').classList.remove('wide');
+  $('lErr').textContent = typeof msg === 'string' ? msg : '';
+  history.replaceState(null, '', location.pathname);
+  chip(); fitSub();
+}
+$('logout').onclick = () => { if (!Q.length || confirm('Masih ada data yang sedang dikirim. Tetap keluar?')) logout(); };
 
 /* ---------- Tab ---------- */
 function fitSub() {
@@ -295,17 +423,18 @@ function fitSub() {
   if (cur > 0 && h.offsetWidth > 0) s.style.fontSize = (20 * h.offsetWidth / cur) + 'px';
 }
 let monLoaded = false, picsLoaded = false;
+const TABS = { in: 'In', mon: 'Mon', usr: 'Usr' };
 function show(tab) {
-  const mon = tab === 'mon';
-  $('vIn').classList.toggle('on', !mon); $('vMon').classList.toggle('on', mon);
-  $('tabIn').classList.toggle('on', !mon); $('tabMon').classList.toggle('on', mon);
-  $('wrap').classList.toggle('wide', mon);
-  history.replaceState(null, '', mon ? '#monitoring' : '#input');
-  if (mon && !monLoaded) loadMon();
-  if (mon && !picsLoaded) loadPics();
+  if (tab === 'usr' && (!S || S.role !== 'admin')) tab = 'in';
+  for (const k in TABS) { $('v' + TABS[k]).classList.toggle('on', k === tab); $('tab' + TABS[k]).classList.toggle('on', k === tab); }
+  $('wrap').classList.toggle('wide', tab === 'mon');
+  history.replaceState(null, '', tab === 'mon' ? '#monitoring' : '#input');
+  if (tab === 'mon') { if (!monLoaded) loadMon(); if (!picsLoaded) loadPics(); }
+  if (tab === 'usr') loadUsers();
 }
 $('tabIn').onclick = () => show('in');
 $('tabMon').onclick = () => show('mon');
+$('tabUsr').onclick = () => show('usr');
 fitSub(); window.addEventListener('load', fitSub); window.addEventListener('resize', fitSub);
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitSub);
 
@@ -314,6 +443,7 @@ const HARI = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
 const BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 const pad = n => String(n).padStart(2, '0');
 function tick() {
+  if (document.hidden || !document.body.classList.contains('in')) return;
   const n = new Date();
   $('dTxt').textContent = HARI[n.getDay()] + ', ' + n.getDate() + ' ' + BULAN[n.getMonth()] + ' ' + n.getFullYear();
   $('tTxt').textContent = pad(n.getHours()) + ':' + pad(n.getMinutes()) + ':' + pad(n.getSeconds());
@@ -322,7 +452,6 @@ tick(); setInterval(tick, 1000);
 const todayISO = () => { const n = new Date(); return n.getFullYear() + '-' + pad(n.getMonth() + 1) + '-' + pad(n.getDate()); };
 
 /* ---------- Nama, invoice, koli ---------- */
-$('nama').value = localStorage.getItem('pic') || '';
 $('nama').addEventListener('input', e => e.target.value = e.target.value.toUpperCase());
 $('invoice').addEventListener('input', e => e.target.value = e.target.value.toUpperCase().replace(/\s+/g, ''));
 $('min').onclick  = () => $('koli').value = Math.max(1, (+$('koli').value || 1) - 1);
@@ -359,7 +488,7 @@ function voice(btn, input, hint, mode) {
 $('micNama').onclick = () => voice($('micNama'), $('nama'), $('hNama'), 'nama');
 $('micInv').onclick  = () => voice($('micInv'), $('invoice'), $('hInv'), 'inv');
 
-/* ---------- Scanner ---------- */
+/* ---------- Scanner (library baru dimuat saat dipakai) ---------- */
 let qr = null;
 function loadLib() {
   return new Promise((res, rej) => {
@@ -388,22 +517,28 @@ $('btnScan').onclick = async () => {
 };
 $('closeScan').onclick = stopScan;
 
-/* ---------- Foto ---------- */
+/* ---------- Foto (dikompres paralel, lebih kecil = upload lebih cepat) ---------- */
 const CAM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
 $('fotos').innerHTML = [1, 2, 3, 4].map((n, i) => '<div class="foto" data-i="' + i + '"><div>' + CAM + '<br>Foto ' + n + '</div><img alt=""><span class="n">' + n + '</span><button type="button" class="x">×</button></div>').join('');
-function compress(file, max = 1280, q = 0.7) {
-  return new Promise(res => {
+async function toBitmap(file) {
+  if (window.createImageBitmap) { try { return await createImageBitmap(file, { imageOrientation: 'from-image' }); } catch (e) {} }
+  return new Promise((res, rej) => {
     const img = new Image(), url = URL.createObjectURL(file);
-    img.onload = () => {
-      const s = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement('canvas');
-      c.width = img.width * s; c.height = img.height * s;
-      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-      const d = c.toDataURL('image/jpeg', q); URL.revokeObjectURL(url);
-      res({ data: d.split(',')[1], type: 'image/jpeg', preview: d });
-    };
-    img.onerror = () => { URL.revokeObjectURL(url); res(null); };
+    img.onload = () => { URL.revokeObjectURL(url); res(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(); };
     img.src = url;
   });
+}
+async function compress(file, max = 1024, q = 0.65) {
+  try {
+    const bmp = await toBitmap(file), w = bmp.width || bmp.naturalWidth, h = bmp.height || bmp.naturalHeight;
+    const s = Math.min(1, max / Math.max(w, h)), c = document.createElement('canvas');
+    c.width = Math.round(w * s); c.height = Math.round(h * s);
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    if (bmp.close) bmp.close();
+    const d = c.toDataURL('image/jpeg', q);
+    return { data: d.split(',')[1], type: 'image/jpeg', preview: d };
+  } catch (e) { return null; }
 }
 const boxes = [...document.querySelectorAll('.foto')];
 const camIn = document.createElement('input'), galIn = document.createElement('input');
@@ -411,14 +546,14 @@ camIn.type = galIn.type = 'file'; camIn.accept = galIn.accept = 'image/*'; camIn
 camIn.style.display = galIn.style.display = 'none'; document.body.append(camIn, galIn);
 let slot = 0;
 async function addFiles(files, start) {
-  const order = [start, ...[0, 1, 2, 3].filter(k => k !== start && !fotos[k])], list = [...files];
-  for (let k = 0; k < list.length && k < order.length; k++) {
-    const r = await compress(list[k]);
-    if (!r) { toast('Foto tidak bisa dibaca (format tidak didukung)', false); continue; }
+  const order = [start, ...[0, 1, 2, 3].filter(k => k !== start && !fotos[k])], list = [...files].slice(0, order.length);
+  const res = await Promise.all(list.map(f => compress(f)));
+  res.forEach((r, k) => {
+    if (!r) { toast('Foto tidak bisa dibaca (format tidak didukung)', false); return; }
     const i = order[k]; fotos[i] = { data: r.data, type: r.type };
     boxes[i].querySelector('img').src = r.preview; boxes[i].classList.add('has');
-  }
-  if (list.length > order.length) toast('Maksimal 4 foto', false);
+  });
+  if (files.length > order.length) toast('Maksimal 4 foto', false);
 }
 camIn.onchange = async () => { if (camIn.files.length) await addFiles(camIn.files, slot); camIn.value = ''; };
 galIn.onchange = async () => { if (galIn.files.length) await addFiles(galIn.files, slot); galIn.value = ''; };
@@ -432,37 +567,57 @@ $('shGal').onclick = () => { $('sheet').classList.remove('open'); galIn.click();
 $('shX').onclick = () => $('sheet').classList.remove('open');
 $('sheet').addEventListener('click', e => { if (e.target.id === 'sheet') $('sheet').classList.remove('open'); });
 
-/* ---------- Kirim ---------- */
-$('f').addEventListener('submit', async e => {
+/* ---------- Kirim: form langsung kosong, data dikirim lewat antrean di latar belakang ---------- */
+const Q = []; let sending = false;
+function chip() { $('qchip').textContent = Q.length ? '⏳ Mengirim ' + Q.length + ' data di latar belakang...' : ''; }
+function sentOk(inv) { CACHE.clear(); monLoaded = false; picsLoaded = false; toast('✅ Tersimpan: ' + inv, true); }
+async function pump() {
+  if (sending) return;
+  sending = true;
+  while (Q.length) {
+    const it = Q[0]; chip();
+    try {
+      await api(it.body);
+      Q.shift(); sentOk(it.body.invoice);
+    } catch (err) {
+      if (!S) break;
+      if (err.retry && it.tries < 3) { it.tries++; await sleep(1500 * it.tries); continue; }
+      Q.shift();
+      // percobaan ulang yang ternyata sudah masuk di percobaan sebelumnya
+      if (it.tries > 0 && /sudah pernah diinput/.test(err.message)) sentOk(it.body.invoice);
+      else toast('❌ ' + it.body.invoice + ' gagal: ' + err.message, false);
+    }
+  }
+  sending = false; chip();
+}
+window.addEventListener('beforeunload', e => { if (Q.length) { e.preventDefault(); e.returnValue = ''; } });
+
+$('f').addEventListener('submit', e => {
   e.preventDefault();
-  const btn = $('btn'), nama = $('nama').value.trim(), invoice = $('invoice').value.trim();
+  const nama = $('nama').value.trim(), invoice = $('invoice').value.trim();
   if (!nama) return toast('Nama PIC wajib diisi', false);
   if (!invoice) return toast('No. Invoice wajib diisi', false);
-  if (!fotos.some(Boolean) && !confirm('Belum ada foto. Tetap simpan?')) return;
-  btn.disabled = true; $('btnTxt').textContent = 'MENYIMPAN...';
-  try {
-    const resp = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ key: SECRET, tanggal: todayISO(), nama, invoice, pengiriman: $('pengiriman').value, koli: $('koli').value, fotos }) });
-    const r = await resp.json();
-    if (r.status !== 'success') throw new Error(r.message);
-    localStorage.setItem('pic', nama); monLoaded = false; picsLoaded = false; CACHE.clear();
-    toast('✅ Tersimpan! ID: ' + r.id + ' (baris ' + r.row + ')', true);
-    $('invoice').value = ''; $('koli').value = 1; $('pengiriman').value = '';
-    boxes.forEach(b => { b.querySelector('img').removeAttribute('src'); b.classList.remove('has'); });
-    fotos.fill(null); $('invoice').focus();
-  } catch (err) { toast('❌ Gagal: ' + err.message, false); }
-  finally { btn.disabled = false; $('btnTxt').textContent = 'SIMPAN DATA'; }
+  if (Q.some(x => x.body.invoice === invoice)) return toast('Invoice ' + invoice + ' masih dalam antrean kirim', false);
+  const kirim = fotos.filter(Boolean);
+  if (!kirim.length && !confirm('Belum ada foto. Tetap simpan?')) return;
+  Q.push({ tries: 0, body: { action: 'add', tanggal: todayISO(), nama, invoice, pengiriman: $('pengiriman').value, koli: $('koli').value, fotos: kirim } });
+  $('invoice').value = ''; $('koli').value = 1; $('pengiriman').value = '';
+  boxes.forEach(b => { b.querySelector('img').removeAttribute('src'); b.classList.remove('has'); });
+  fotos.fill(null); $('invoice').focus();
+  toast('📥 ' + invoice + ' dikirim di latar belakang', true);
+  chip(); pump();
 });
 
 /* ================= MONITORING (ringan: paging & filter di server) ================= */
-const PER = 30;
-let CUR = [], page = 1, pages = 1, reqCtl = null;
+const PER = 20;
+let CUR = [], page = 1, pages = 1, reqCtl = null, wantKey = '';
 const fileId = u => { const m = String(u).match(/\/d\/([^/?]+)/) || String(u).match(/[?&]id=([^&]+)/); return m ? m[1] : ''; };
 const thumb = (u, w) => 'https://drive.google.com/thumbnail?id=' + fileId(u) + '&sz=w' + w;
 const dlUrl = u => 'https://drive.google.com/uc?export=download&id=' + fileId(u);
 const tglID = iso => { const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? m[3] + '/' + m[2] + '/' + m[1] : iso; };
 const cleanPic = s => String(s || '').replace(/^\s*PACKING\s*ONLINE\s*:?\s*/i, '').trim().toUpperCase();
 const emptyRow = (t, c) => '<tr><td colspan="8" class="msg ' + (c || '') + '">' + t + '</td></tr>';
+const DEF_KEY = new URLSearchParams({ action: 'list', page: 1, per: PER, tgl: '', pic: '', kurir: '', q: '' }).toString();
 
 // opsi pengiriman: salin dari form input
 const kurirOpts = [...$('pengiriman').options].filter(o => o.value);
@@ -472,32 +627,45 @@ $('ePeng').innerHTML = '<option value="">-</option>' + kurirOpts.map(o => '<opti
 const filters = () => ({ tgl: $('tgl').value, pic: $('pic').value.trim().toUpperCase(), kurir: $('kurir').value, q: $('q').value.trim().toUpperCase() });
 
 async function loadPics() {
+  if (!S) return;
   picsLoaded = true;
   try {
-    const r = await fetch(API_URL + '?action=meta&key=' + encodeURIComponent(SECRET));
+    const r = await fetch(API_URL + '?' + new URLSearchParams({ action: 'meta', token: S.token }));
     const j = await r.json();
+    if (j.code === 'auth') return logout(j.message);
     if (j.status === 'success') $('picList').innerHTML = j.pics.map(n => '<option value="' + esc(n) + '"></option>').join('');
+    else picsLoaded = false;
   } catch (e) { picsLoaded = false; }
 }
 
 async function loadMon(force) {
-  const qs = new URLSearchParams({ action: 'list', key: SECRET, page, per: PER, ...filters() }).toString();
-  if (!force && CACHE.has(qs)) { applyData(CACHE.get(qs)); return; }
+  if (!S) return;
+  const key = new URLSearchParams({ action: 'list', page, per: PER, ...filters() }).toString();
+  if (!force && CACHE.has(key)) { wantKey = key; applyData(CACHE.get(key)); return; }
+  if (!force && key === wantKey && reqCtl) return;           // permintaan yang sama sedang berjalan
   if (reqCtl) reqCtl.abort();
-  reqCtl = new AbortController();
-  const wrap = $('tbwrap');
-  if (CUR.length) wrap.classList.add('busy'); else $('list').innerHTML = emptyRow('Memuat data...');
+  wantKey = key; reqCtl = new AbortController();
+  const ctl = reqCtl, wrap = $('tbwrap');
+  if (!CUR.length) {
+    const stale = key === DEF_KEY ? lsGet('mon0') : null;     // tampilkan data terakhir dulu, segarkan di belakang
+    if (stale) applyData(stale); else $('list').innerHTML = emptyRow('Memuat data...');
+  }
+  if (CUR.length) wrap.classList.add('busy');
   try {
-    const r = await fetch(API_URL + '?' + qs, { signal: reqCtl.signal });
+    const r = await fetch(API_URL + '?' + key + '&token=' + encodeURIComponent(S.token), { signal: ctl.signal });
     const j = await r.json();
+    if (j.code === 'auth') return logout(j.message);
     if (j.status !== 'success') throw new Error(j.message || 'Respon API tidak valid');
-    CACHE.set(qs, j); if (CACHE.size > 40) CACHE.delete(CACHE.keys().next().value);
-    monLoaded = true; applyData(j);
+    CACHE.set(key, j); if (CACHE.size > 40) CACHE.delete(CACHE.keys().next().value);
+    if (key === DEF_KEY) lsSet('mon0', j);
+    monLoaded = true;
+    if (key === wantKey) applyData(j);
   } catch (e) {
     if (e.name === 'AbortError') return;
     wrap.classList.remove('busy');
-    $('list').innerHTML = emptyRow('Gagal memuat data: ' + esc(e.message), 'err');
-  }
+    if (!CUR.length) $('list').innerHTML = emptyRow('Gagal memuat data: ' + esc(e.message), 'err');
+    else toast('Gagal memuat data terbaru: ' + e.message, false);
+  } finally { if (reqCtl === ctl) reqCtl = null; }
 }
 
 function applyData(j) {
@@ -505,19 +673,21 @@ function applyData(j) {
   page = j.page; pages = j.pages;
   $('tbwrap').classList.remove('busy');
   $('stats').innerHTML = '<span>Data: <b>' + j.total.toLocaleString('id-ID') + '</b></span><span>Total koli: <b>' + j.totalKoli.toLocaleString('id-ID') + '</b></span>';
-  renderTable(j.total);
+  renderTable();
   const from = (page - 1) * PER;
   $('pager').innerHTML = j.total
     ? '<span>Baris ' + (from + 1) + ' sampai ' + Math.min(from + PER, j.total) + ' dari ' + j.total.toLocaleString('id-ID') + '</span><span><button type="button" data-p="-1"' + (page <= 1 ? ' disabled' : '') + '>Sebelumnya</button> &nbsp;Halaman <b>' + page + '</b> dari ' + pages + '&nbsp; <button type="button" data-p="1"' + (page >= pages ? ' disabled' : '') + '>Berikutnya</button></span>'
     : '';
 }
 
-function renderTable(total) {
+// Hanya 1 thumbnail per baris (+ jumlah sisanya); semua foto tampil di galeri saat diklik.
+function renderTable() {
   if (!CUR.length) { $('list').innerHTML = emptyRow('Tidak ada data untuk filter ini. Tekan "Tampilkan semua" untuk melihat semua data.'); return; }
   const from = (page - 1) * PER;
   $('list').innerHTML = CUR.map((d, i) => {
-    const ph = d.fotos.length
-      ? d.fotos.map((u, k) => '<a data-r="' + i + '" data-k="' + k + '"><img loading="lazy" decoding="async" src="' + esc(thumb(u, 160)) + '" alt="Foto ' + esc(d.invoice) + '"></a>').join('')
+    const n = d.fotos.length;
+    const ph = n
+      ? '<a data-r="' + i + '" data-k="0"><img loading="lazy" decoding="async" src="' + esc(thumb(d.fotos[0], 120)) + '" alt="Foto ' + esc(d.invoice) + '">' + (n > 1 ? '<span class="cnt">+' + (n - 1) + '</span>' : '') + '</a>'
       : '<span class="none">Tidak ada foto</span>';
     return '<tr><td class="no">' + (from + i + 1) + '</td><td data-l="Tanggal">' + esc(tglID(d.tanggal)) + '</td><td class="inv">' + esc(d.invoice) + '</td><td data-l="PIC">' + esc(d.pic || '-') +
       '</td><td data-l="Pengiriman">' + esc(d.pengiriman || '-') + '</td><td class="kl" data-l="Koli">' + (d.koli || 0) + '</td><td><div class="ph">' + ph + '</div></td>' +
@@ -550,7 +720,6 @@ function lbShow() {
   $('lbPrev').classList.toggle('hide', n < 2); $('lbNext').classList.toggle('hide', n < 2);
   $('lbPrev').disabled = LB.i === 0; $('lbNext').disabled = LB.i === n - 1;
   $('lbDots').innerHTML = n > 1 ? LB.urls.map((_, k) => '<i class="' + (k === LB.i ? 'on' : '') + '"></i>').join('') : '';
-  // muat foto sebelah lebih awal supaya geser terasa cepat
   [LB.i - 1, LB.i + 1].forEach(k => { if (LB.urls[k]) new Image().src = thumb(LB.urls[k], 1600); });
 }
 function lbOpen(r, k) { const d = CUR[r]; if (!d || !d.fotos.length) return; LB = { urls: d.fotos, i: k, title: d.invoice }; $('lb').classList.add('open'); lbShow(); }
@@ -568,7 +737,6 @@ document.addEventListener('keydown', e => {
   if ($('lb').classList.contains('open')) { if (e.key === 'ArrowLeft') lbGo(-1); else if (e.key === 'ArrowRight') lbGo(1); else if (e.key === 'Escape') lbClose(); }
   else if ($('ed').classList.contains('open') && e.key === 'Escape') $('ed').classList.remove('open');
 });
-// geser jari (swipe)
 let sx = 0, sy = 0;
 $('lb').addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
 $('lb').addEventListener('touchend', e => {
@@ -599,12 +767,9 @@ $('eSave').onclick = async () => {
   if (!invoice) return toast('Invoice tidak boleh kosong', false);
   const b = $('eSave'); b.disabled = true; b.textContent = 'Menyimpan...';
   try {
-    const resp = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ key: SECRET, action: 'update', id: d.id, row: d.row, invoice, pengiriman, koli }) });
-    const r = await resp.json();
-    if (r.status !== 'success') throw new Error(r.message);
+    const r = await api({ action: 'update', id: d.id, row: d.row, invoice, pengiriman, koli });
     d.invoice = r.invoice; d.pengiriman = pengiriman; d.koli = koli; d.row = r.row;
-    CACHE.clear();
+    CACHE.clear(); lsDel('mon0');
     $('ed').classList.remove('open');
     renderTable();
     toast('✅ Data berhasil diubah', true);
@@ -612,7 +777,42 @@ $('eSave').onclick = async () => {
   finally { b.disabled = false; b.textContent = 'Simpan'; }
 };
 
-if (location.hash === '#monitoring') show('mon');
+/* ---------- Pengguna (khusus admin) ---------- */
+function renderUsers(list) {
+  $('uList').innerHTML = list.length ? list.map(u =>
+    '<div class="urow' + (u.aktif ? '' : ' off') + '"><div class="ui"><b>' + esc(u.nama) + '</b><div class="meta">NIP ' + esc(u.nip) + ' · ' + (u.role === 'admin' ? 'Admin' : 'Petugas') + (u.aktif ? '' : ' · Nonaktif') + '</div></div>' +
+    '<div class="uact"><button type="button" class="ebtn" data-a="pw" data-n="' + esc(u.nip) + '">Reset password</button>' +
+    '<button type="button" class="ebtn" data-a="tog" data-n="' + esc(u.nip) + '" data-v="' + (u.aktif ? 0 : 1) + '">' + (u.aktif ? 'Nonaktifkan' : 'Aktifkan') + '</button>' +
+    '<button type="button" class="ebtn dng" data-a="del" data-n="' + esc(u.nip) + '">Hapus</button></div></div>').join('')
+    : '<div class="msg">Belum ada pengguna.</div>';
+}
+async function loadUsers() {
+  try { renderUsers((await api({ action: 'users' })).users); }
+  catch (e) { $('uList').innerHTML = '<div class="msg err">Gagal memuat: ' + esc(e.message) + '</div>'; }
+}
+$('uNama').addEventListener('input', e => e.target.value = e.target.value.toUpperCase());
+$('uf').addEventListener('submit', async e => {
+  e.preventDefault();
+  const b = $('uBtn'); b.disabled = true; $('uTxt').textContent = 'MENYIMPAN...';
+  try {
+    const j = await api({ action: 'user_add', nip: $('uNip').value.trim(), nama: $('uNama').value.trim(), password: $('uPass').value, role: $('uRole').value });
+    renderUsers(j.users); $('uf').reset(); toast('✅ Pengguna ditambahkan', true);
+  } catch (err) { toast('❌ ' + err.message, false); }
+  finally { b.disabled = false; $('uTxt').textContent = 'TAMBAH PENGGUNA'; }
+});
+$('uList').addEventListener('click', async e => {
+  const b = e.target.closest('button[data-a]'); if (!b) return;
+  const nip = b.dataset.n, a = b.dataset.a; let body;
+  if (a === 'pw') { const p = prompt('Password baru untuk NIP ' + nip + ' (minimal 6 karakter):'); if (!p) return; body = { action: 'user_update', nip, password: p }; }
+  else if (a === 'tog') body = { action: 'user_update', nip, aktif: b.dataset.v === '1' };
+  else { if (!confirm('Hapus pengguna NIP ' + nip + '?')) return; body = { action: 'user_delete', nip }; }
+  b.disabled = true;
+  try { renderUsers((await api(body)).users); toast('✅ Berhasil', true); }
+  catch (err) { toast('❌ ' + err.message, false); b.disabled = false; }
+});
+
+/* ---------- Mulai ---------- */
+if (S) enterApp();
 </script>
 </body>
 </html>
