@@ -4,228 +4,159 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<title>Input Packing Online</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<title>Packing Online AZ·KO</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg:#ffffff; --txt:#14213d; --mut:#6b7a90; --line:#dfe6ee; --field:#f3f6fa;
-    --a1:#10e0a0; --a2:#2aa9ff; --red:#e0112b; --danger:#ff5d73;
-  }
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{margin:0;min-height:100%}
-  body{
-    font-family:'Inter',system-ui,Arial,sans-serif;color:var(--txt);background:var(--bg);
-    padding:18px 14px calc(30px + env(safe-area-inset-bottom));
-    overflow-x:hidden;
-  }
+:root{--bg:#f4f7fa;--txt:#14213d;--mut:#6b7a90;--line:#dfe6ee;--field:#f3f6fa;--red:#e0112b}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{font-family:'Inter',system-ui,Arial,sans-serif;color:var(--txt);background:var(--bg);padding:18px 14px calc(30px + env(safe-area-inset-bottom));overflow-x:hidden}
+.wrap{max-width:560px;margin:auto;transition:max-width .2s}
+.wrap.wide{max-width:960px}
+.card{background:#fff;border:1px solid #e6edf3;border-radius:26px;padding:22px 20px 24px;box-shadow:0 30px 60px -22px rgba(20,33,61,.30),0 8px 20px -10px rgba(20,33,61,.12)}
 
-  .wrap{position:relative;z-index:1;max-width:560px;margin:auto}
-  .card{
-    background:#fff;border:1px solid #e6edf3;border-radius:26px;padding:22px 20px 24px;
-    box-shadow:0 30px 60px -22px rgba(20,33,61,.30),0 8px 20px -10px rgba(20,33,61,.12),0 2px 0 #fff inset;
-    transform-style:preserve-3d;transition:transform .15s ease-out;will-change:transform;
-  }
+/* header */
+.head{display:flex;align-items:center;gap:18px;margin:0 4px 14px}
+.cube-wrap{width:64px;height:64px;perspective:380px;flex:none;margin:2px 4px 2px 2px}
+.cube{width:64px;height:64px;position:relative;transform-style:preserve-3d;animation:spin 9s linear infinite}
+.cube i{position:absolute;inset:0;display:grid;place-items:center;font-style:normal;font-weight:900;font-size:15px;color:var(--red);
+ background:linear-gradient(135deg,#fff 0%,#ffe3ea 55%,#ffc9d7 100%);border:1px solid rgba(224,17,43,.28);
+ text-shadow:1px 1px 0 #a30c1f,2px 2px 0 #8c0a1a,3px 3px 5px rgba(0,0,0,.35),-1px -1px 0 rgba(255,255,255,.9)}
+.cube i:nth-child(1){transform:translateZ(32px)}.cube i:nth-child(2){transform:rotateY(180deg) translateZ(32px)}
+.cube i:nth-child(3){transform:rotateY(90deg) translateZ(32px)}.cube i:nth-child(4){transform:rotateY(-90deg) translateZ(32px)}
+.cube i:nth-child(5){transform:rotateX(90deg) translateZ(32px)}.cube i:nth-child(6){transform:rotateX(-90deg) translateZ(32px)}
+@keyframes spin{from{transform:rotateX(-20deg) rotateY(0)}to{transform:rotateX(-20deg) rotateY(360deg)}}
+.titlebox{display:flex;flex-direction:column;align-items:flex-start;min-width:0}
+h1{margin:0;display:inline-block;white-space:nowrap;font-size:clamp(17px,5.4vw,22px);font-weight:800;letter-spacing:-.3px;
+ background:linear-gradient(90deg,#14213d,#0a8a60);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{display:inline-block;white-space:nowrap;line-height:1;margin-top:6px;font-size:15px;font-weight:900;letter-spacing:.12em;color:var(--red);
+ text-shadow:.06em .06em 0 #a30c1f,.12em .12em .18em rgba(0,0,0,.25)}
 
-  /* header */
-  .head{display:flex;align-items:center;gap:18px;margin-bottom:18px;transform:translateZ(30px)}
-  .cube-wrap{width:64px;height:64px;perspective:380px;flex:none;margin:2px 4px 2px 2px}
-  .cube{width:64px;height:64px;position:relative;transform-style:preserve-3d;animation:spin 9s linear infinite}
-  .cube i{
-    position:absolute;inset:0;display:grid;place-items:center;font-style:normal;
-    font-weight:900;font-size:15px;letter-spacing:.3px;color:var(--red);
-    background:linear-gradient(135deg,#ffffff 0%,#ffe3ea 55%,#ffc9d7 100%);
-    border:1px solid rgba(224,17,43,.28);
-    text-shadow:1px 1px 0 #a30c1f,2px 2px 0 #8c0a1a,3px 3px 5px rgba(0,0,0,.35),-1px -1px 0 rgba(255,255,255,.9);
-    box-shadow:inset 0 0 14px rgba(255,150,175,.35);
-  }
-  .cube i:nth-child(1){transform:translateZ(32px)}
-  .cube i:nth-child(2){transform:rotateY(180deg) translateZ(32px)}
-  .cube i:nth-child(3){transform:rotateY(90deg) translateZ(32px)}
-  .cube i:nth-child(4){transform:rotateY(-90deg) translateZ(32px)}
-  .cube i:nth-child(5){transform:rotateX(90deg) translateZ(32px)}
-  .cube i:nth-child(6){transform:rotateX(-90deg) translateZ(32px)}
-  @keyframes spin{from{transform:rotateX(-20deg) rotateY(0)}to{transform:rotateX(-20deg) rotateY(360deg)}}
-  .titlebox{display:flex;flex-direction:column;align-items:flex-start;min-width:0}
-  h1{margin:0;display:inline-block;white-space:nowrap;font-size:clamp(17px,5.4vw,22px);font-weight:800;letter-spacing:-.3px;
-    background:linear-gradient(90deg,#14213d,#0a8a60);-webkit-background-clip:text;background-clip:text;color:transparent}
-  .sub{display:inline-block;white-space:nowrap;line-height:1;margin-top:6px;font-size:15px;font-weight:900;
-    letter-spacing:.12em;color:var(--red);
-    text-shadow:.06em .06em 0 #a30c1f,.12em .12em .18em rgba(0,0,0,.25)}
+/* tab */
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#e6edf3;padding:5px;border-radius:16px;margin-bottom:14px}
+.tabs button{border:0;border-radius:12px;padding:12px;font:800 14px 'Inter',sans-serif;color:var(--mut);background:transparent;cursor:pointer}
+.tabs button.on{background:#fff;color:var(--txt);box-shadow:0 3px 8px rgba(20,33,61,.12)}
+.view{display:none}.view.on{display:block}
 
-  /* tanggal terkunci */
-  .datebox{
-    display:flex;align-items:center;justify-content:space-between;gap:10px;
-    padding:14px 16px;border-radius:16px;margin-bottom:6px;
-    background:linear-gradient(135deg,#e8fbf3,#e6f3ff);
-    border:1px solid rgba(16,200,138,.4);transform:translateZ(18px);
-    box-shadow:0 6px 14px -8px rgba(16,200,138,.5);
-  }
-  .datebox .d{font-weight:700;font-size:15px}
-  .datebox .t{font-size:12px;color:var(--mut);margin-top:2px;font-variant-numeric:tabular-nums}
-  .lock{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:#0a8a60;
-    background:rgba(16,200,138,.14);padding:6px 10px;border-radius:999px;white-space:nowrap}
+/* form */
+.datebox{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-radius:16px;margin-bottom:6px;
+ background:linear-gradient(135deg,#e8fbf3,#e6f3ff);border:1px solid rgba(16,200,138,.4)}
+.datebox .d{font-weight:700;font-size:15px}.datebox .t{font-size:12px;color:var(--mut);margin-top:2px;font-variant-numeric:tabular-nums}
+.lock{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:#0a8a60;background:rgba(16,200,138,.14);padding:6px 10px;border-radius:999px;white-space:nowrap}
+label{display:block;font-size:11.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--mut);margin:16px 0 7px 2px}
+.field{display:flex;gap:8px}
+input,select{width:100%;padding:14px 15px;font:600 15.5px 'Inter',sans-serif;color:var(--txt);background:var(--field);border:1px solid var(--line);border-radius:14px;outline:none;
+ box-shadow:inset 0 3px 7px rgba(20,33,61,.08);appearance:none;-webkit-appearance:none}
+input::placeholder{color:#9aa8bb;font-weight:500}
+input:focus,select:focus{border-color:#10c88a;box-shadow:inset 0 3px 7px rgba(20,33,61,.08),0 0 0 4px rgba(16,224,160,.2)}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%236b7a90' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+ background-repeat:no-repeat;background-position:right 15px center;padding-right:38px}
+.ib{flex:none;width:50px;border:0;border-radius:14px;cursor:pointer;color:#06231b;display:grid;place-items:center;background:linear-gradient(180deg,#3cf0b8,#10c88a);
+ box-shadow:0 5px 0 #0a8a60,0 10px 18px rgba(16,224,160,.28);transition:transform .08s,box-shadow .08s}
+.ib.blue{background:linear-gradient(180deg,#5cc0ff,#2a8fe6);box-shadow:0 5px 0 #1b64a8,0 10px 18px rgba(42,169,255,.28);color:#04223d}
+.ib:active{transform:translateY(4px);box-shadow:0 1px 0 #0a8a60}.ib.blue:active{box-shadow:0 1px 0 #1b64a8}
+.ib svg{width:22px;height:22px}
+.ib.rec{background:linear-gradient(180deg,#ff7b8d,#ff4560);box-shadow:0 5px 0 #b02338;color:#fff;animation:pulse 1.1s infinite}
+@keyframes pulse{to{box-shadow:0 5px 0 #b02338,0 0 0 14px rgba(255,69,96,0)}}
+.hint{font-size:11.5px;color:#0a8a60;margin:6px 2px 0;min-height:14px;font-weight:600}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper input{text-align:center;padding:14px 4px;-moz-appearance:textfield}
+.stepper input::-webkit-outer-spin-button,.stepper input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.sb{flex:none;width:44px;height:48px;border:0;border-radius:12px;font-size:22px;font-weight:800;cursor:pointer;color:#fff;background:linear-gradient(180deg,#5b6f94,#3f5278);box-shadow:0 4px 0 #26365a}
+.sb:active{transform:translateY(3px);box-shadow:0 1px 0 #26365a}
+.fotos{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.foto{position:relative;aspect-ratio:4/3;border-radius:16px;overflow:hidden;cursor:pointer;border:2px dashed #b9c6d6;background:var(--field);display:grid;place-items:center;text-align:center;color:var(--mut);font-size:12px;font-weight:600}
+.foto svg{width:28px;height:28px;margin-bottom:4px;color:#2aa9ff}
+.foto img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
+.foto.has{border-style:solid;border-color:#10c88a}.foto.has img{display:block}
+.foto .x{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;border:0;display:none;background:rgba(255,69,96,.92);color:#fff;font-weight:800;cursor:pointer;z-index:2;line-height:1}
+.foto.has .x{display:block}
+.foto .n{position:absolute;left:8px;bottom:6px;font-size:11px;font-weight:800;color:#fff;z-index:2;background:rgba(0,0,0,.5);padding:2px 8px;border-radius:999px;display:none}
+.foto.has .n{display:block}
+#sheet{position:fixed;inset:0;z-index:70;background:rgba(3,7,16,.6);display:none;align-items:flex-end;justify-content:center}
+#sheet.open{display:flex}
+.sh{width:100%;max-width:560px;background:#fff;border-radius:22px 22px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));display:grid;gap:10px}
+.sh h4{margin:0 0 4px;font-size:15px}
+.sh button{padding:15px;border:0;border-radius:14px;font:700 15px 'Inter',sans-serif;cursor:pointer;background:var(--field);color:var(--txt)}
+.sh button.c{background:#ffe3e8;color:#b02338}
+.save{width:100%;margin-top:24px;padding:17px;border:0;border-radius:18px;cursor:pointer;font:800 17px 'Inter',sans-serif;letter-spacing:.4px;color:#04231a;
+ background:linear-gradient(180deg,#3cf0b8,#10c88a 60%,#0ea978);box-shadow:0 7px 0 #0a7f59,0 18px 28px rgba(16,224,160,.3);display:flex;align-items:center;justify-content:center;gap:10px}
+.save:active{transform:translateY(5px);box-shadow:0 2px 0 #0a7f59}
+.save:disabled{filter:grayscale(.6) brightness(.9);cursor:wait}
+.spin{width:18px;height:18px;border:3px solid rgba(4,35,26,.3);border-top-color:#04231a;border-radius:50%;animation:r .7s linear infinite;display:none}
+.save:disabled .spin{display:block}
+@keyframes r{to{transform:rotate(360deg)}}
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translate(-50%,120px);max-width:92vw;padding:14px 20px;border-radius:14px;font-weight:700;font-size:14px;z-index:90;box-shadow:0 14px 34px rgba(20,33,61,.35);transition:transform .35s cubic-bezier(.2,1.2,.4,1)}
+#toast.show{transform:translate(-50%,0)}#toast.ok{background:#10c88a;color:#032a1e}#toast.err{background:#ff4560;color:#fff}
+#scan{position:fixed;inset:0;z-index:50;background:rgba(3,7,16,.92);display:none;flex-direction:column;align-items:center;justify-content:center;padding:18px}
+#scan.open{display:flex}
+.sbox{width:100%;max-width:440px;background:#0d1730;border:1px solid rgba(255,255,255,.14);border-radius:22px;padding:16px;color:#e9f0ff}
+.sbox h3{margin:0 0 4px;font-size:17px}.sbox p{margin:0 0 12px;font-size:12.5px;color:#8fa3c4}
+#reader{width:100%;border-radius:14px;overflow:hidden;background:#000;min-height:220px}
+.close{width:100%;margin-top:14px;padding:14px;border:0;border-radius:14px;font:800 15px 'Inter',sans-serif;cursor:pointer;color:#fff;background:linear-gradient(180deg,#ff7b8d,#ff4560);box-shadow:0 5px 0 #b02338}
 
-  label{display:block;font-size:11.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--mut);margin:16px 0 7px 2px}
-  .field{position:relative;display:flex;gap:8px;transform:translateZ(14px)}
-  input,select{
-    width:100%;padding:14px 15px;font:600 15.5px 'Inter',sans-serif;color:var(--txt);
-    background:var(--field);border:1px solid var(--line);border-radius:14px;outline:none;
-    box-shadow:inset 0 3px 7px rgba(20,33,61,.08);transition:border .2s,box-shadow .2s;appearance:none;-webkit-appearance:none
-  }
-  input::placeholder{color:#9aa8bb;font-weight:500}
-  input:focus,select:focus{border-color:#10c88a;box-shadow:inset 0 3px 7px rgba(20,33,61,.08),0 0 0 4px rgba(16,224,160,.2)}
-  select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%236b7a90' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
-    background-repeat:no-repeat;background-position:right 15px center;padding-right:38px}
-  select option{background:#fff;color:var(--txt)}
-
-  /* tombol ikon 3D */
-  .ib{
-    flex:none;width:50px;border:0;border-radius:14px;cursor:pointer;color:#06231b;display:grid;place-items:center;
-    background:linear-gradient(180deg,#3cf0b8,#10c88a);
-    box-shadow:0 5px 0 #0a8a60,0 10px 18px rgba(16,224,160,.28);transition:transform .08s,box-shadow .08s;
-  }
-  .ib.blue{background:linear-gradient(180deg,#5cc0ff,#2a8fe6);box-shadow:0 5px 0 #1b64a8,0 10px 18px rgba(42,169,255,.28);color:#04223d}
-  .ib:active{transform:translateY(4px);box-shadow:0 1px 0 #0a8a60,0 4px 8px rgba(0,0,0,.2)}
-  .ib.blue:active{box-shadow:0 1px 0 #1b64a8,0 4px 8px rgba(0,0,0,.2)}
-  .ib svg{width:22px;height:22px}
-  .ib.rec{background:linear-gradient(180deg,#ff7b8d,#ff4560);box-shadow:0 5px 0 #b02338,0 0 0 0 rgba(255,69,96,.6);color:#fff;animation:pulse 1.1s infinite}
-  @keyframes pulse{to{box-shadow:0 5px 0 #b02338,0 0 0 14px rgba(255,69,96,0)}}
-  .hint{font-size:11.5px;color:#0a8a60;margin:6px 2px 0;min-height:14px;font-weight:600}
-
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-
-  /* stepper koli */
-  .stepper{display:flex;align-items:center;gap:6px;transform:translateZ(14px)}
-  .stepper input{text-align:center;padding:14px 4px}
-  .stepper input::-webkit-outer-spin-button,.stepper input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-  .stepper input{-moz-appearance:textfield}
-  .sb{flex:none;width:44px;height:48px;border:0;border-radius:12px;font-size:22px;font-weight:800;cursor:pointer;color:#fff;
-    background:linear-gradient(180deg,#5b6f94,#3f5278);box-shadow:0 4px 0 #26365a;transition:transform .08s,box-shadow .08s}
-  .sb:active{transform:translateY(3px);box-shadow:0 1px 0 #26365a}
-
-  /* foto */
-  .fotos{display:grid;grid-template-columns:1fr 1fr;gap:12px;transform:translateZ(14px)}
-  .foto{position:relative;aspect-ratio:4/3;border-radius:16px;overflow:hidden;cursor:pointer;
-    border:2px dashed #b9c6d6;background:var(--field);
-    display:grid;place-items:center;text-align:center;color:var(--mut);font-size:12px;font-weight:600;
-    transition:transform .2s,border-color .2s;box-shadow:inset 0 3px 8px rgba(20,33,61,.07)}
-  .foto:hover{transform:translateY(-2px) scale(1.01);border-color:#10c88a}
-  .foto svg{width:28px;height:28px;margin-bottom:4px;color:var(--a2)}
-  .foto img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
-  .foto.has{border-style:solid;border-color:#10c88a}
-  .foto.has img{display:block}
-  .foto .x{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;border:0;display:none;
-    background:rgba(255,69,96,.92);color:#fff;font-weight:800;cursor:pointer;z-index:2;line-height:1}
-  .foto.has .x{display:block}
-  .foto .n{position:absolute;left:8px;bottom:6px;font-size:11px;font-weight:800;color:#fff;z-index:2;
-    background:rgba(0,0,0,.5);padding:2px 8px;border-radius:999px;display:none}
-  .foto.has .n{display:block}
-
-  /* menu pilih sumber foto */
-  #sheet{position:fixed;inset:0;z-index:70;background:rgba(3,7,16,.6);display:none;align-items:flex-end;justify-content:center}
-  #sheet.open{display:flex}
-  .sh{width:100%;max-width:560px;background:#fff;border-radius:22px 22px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));display:grid;gap:10px}
-  .sh h4{margin:0 0 4px;font-size:15px}
-  .sh button{padding:15px;border:0;border-radius:14px;font:700 15px 'Inter',sans-serif;cursor:pointer;background:var(--field);color:var(--txt)}
-  .sh button.c{background:#ffe3e8;color:#b02338}
-
-  /* tombol simpan */
-  .save{
-    width:100%;margin-top:24px;padding:17px;border:0;border-radius:18px;cursor:pointer;
-    font:800 17px 'Inter',sans-serif;letter-spacing:.4px;color:#04231a;
-    background:linear-gradient(180deg,#3cf0b8,#10c88a 60%,#0ea978);
-    box-shadow:0 7px 0 #0a7f59,0 18px 28px rgba(16,224,160,.3);
-    transition:transform .08s,box-shadow .08s;transform:translateZ(24px);
-    display:flex;align-items:center;justify-content:center;gap:10px
-  }
-  .save:active{transform:translateY(5px) translateZ(24px);box-shadow:0 2px 0 #0a7f59,0 6px 12px rgba(0,0,0,.2)}
-  .save:disabled{filter:grayscale(.6) brightness(.9);cursor:wait}
-  .spin{width:18px;height:18px;border:3px solid rgba(4,35,26,.3);border-top-color:#04231a;border-radius:50%;animation:r .7s linear infinite;display:none}
-  .save:disabled .spin{display:block}
-  @keyframes r{to{transform:rotate(360deg)}}
-
-  /* toast */
-  #toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translate(-50%,120px);
-    max-width:92vw;padding:14px 20px;border-radius:14px;font-weight:700;font-size:14px;z-index:90;
-    box-shadow:0 14px 34px rgba(20,33,61,.35);transition:transform .35s cubic-bezier(.2,1.2,.4,1)}
-  #toast.show{transform:translate(-50%,0)}
-  #toast.ok{background:#10c88a;color:#032a1e}
-  #toast.err{background:#ff4560;color:#fff}
-
-  /* scanner modal */
-  #scan{position:fixed;inset:0;z-index:50;background:rgba(3,7,16,.92);backdrop-filter:blur(8px);
-    display:none;flex-direction:column;align-items:center;justify-content:center;padding:18px}
-  #scan.open{display:flex}
-  .sbox{width:100%;max-width:440px;background:#0d1730;border:1px solid rgba(255,255,255,.14);border-radius:22px;padding:16px;color:#e9f0ff;
-    box-shadow:0 30px 70px rgba(0,0,0,.7)}
-  .sbox h3{margin:0 0 4px;font-size:17px}
-  .sbox p{margin:0 0 12px;font-size:12.5px;color:#8fa3c4}
-  #reader{width:100%;border-radius:14px;overflow:hidden;background:#000;min-height:220px}
-  #reader video{border-radius:14px}
-  .close{width:100%;margin-top:14px;padding:14px;border:0;border-radius:14px;font:800 15px 'Inter',sans-serif;cursor:pointer;color:#fff;
-    background:linear-gradient(180deg,#ff7b8d,#ff4560);box-shadow:0 5px 0 #b02338}
-  .close:active{transform:translateY(4px);box-shadow:0 1px 0 #b02338}
-
-  @media (prefers-reduced-motion:reduce){.cube{animation:none}}
+/* monitoring */
+.bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+.bar input,.bar select,.bar button{padding:11px 12px;font:600 14px 'Inter',sans-serif;border-radius:10px;box-shadow:none}
+.bar button{border:0;color:#fff;cursor:pointer;background:#0a8a60}
+.stats{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--mut);margin:0 2px 12px}.stats b{color:var(--txt)}
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:10px}
+.item{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:grid;gap:8px;align-content:start}
+.top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px}
+.inv{font-weight:800;font-size:16px;word-break:break-all}
+.meta{font-size:13px;color:var(--mut)}.meta b{color:var(--txt);font-weight:600}
+.ph{display:flex;gap:8px;flex-wrap:wrap}
+.ph a{display:block;width:84px;height:64px;border-radius:8px;overflow:hidden;background:#e9eef4;border:1px solid var(--line)}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.none{font-size:12px;color:#a0adbf}
+.msg{padding:30px 10px;text-align:center;color:var(--mut);grid-column:1/-1}.msg.err{color:var(--red)}
+#lb{position:fixed;inset:0;background:rgba(3,7,16,.88);display:none;align-items:center;justify-content:center;z-index:95;padding:14px}
+#lb.open{display:flex}#lb img{max-width:100%;max-height:92vh;border-radius:8px}
+@media (prefers-reduced-motion:reduce){.cube{animation:none}}
 </style>
 </head>
 <body>
+<div class="wrap" id="wrap">
 
-<div class="wrap">
-  <div class="card" id="card">
+  <div class="head">
+    <div class="cube-wrap"><div class="cube"><i>AZ·KO</i><i>AZ·KO</i><i>AZ·KO</i><i>AZ·KO</i><i></i><i></i></div></div>
+    <div class="titlebox"><h1>Packing Online</h1><div class="sub">AZ·KO SIDOARJO</div></div>
+  </div>
 
-    <div class="head">
-      <div class="cube-wrap"><div class="cube"><i>AZ·KO</i><i>AZ·KO</i><i>AZ·KO</i><i>AZ·KO</i><i></i><i></i></div></div>
-      <div class="titlebox">
-        <h1>Input Packing Online</h1>
-        <div class="sub">AZ·KO SIDOARJO</div>
-      </div>
-    </div>
+  <div class="tabs" role="tablist">
+    <button type="button" id="tabIn" class="on" role="tab">Input Data</button>
+    <button type="button" id="tabMon" role="tab">Monitoring</button>
+  </div>
 
-    <!-- TANGGAL TERKUNCI -->
-    <label style="margin-top:4px">Tanggal</label>
+  <!-- ===== INPUT ===== -->
+  <div class="view on" id="vIn"><div class="card">
+    <label style="margin-top:0">Tanggal</label>
     <div class="datebox">
-      <div>
-        <div class="d" id="dTxt">-</div>
-        <div class="t" id="tTxt">-</div>
-      </div>
-      <div class="lock">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-        OTOMATIS
-      </div>
+      <div><div class="d" id="dTxt">-</div><div class="t" id="tTxt">-</div></div>
+      <div class="lock"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>OTOMATIS</div>
     </div>
 
     <form id="f" autocomplete="off">
-
-      <!-- NAMA PIC -->
       <label for="nama">Nama PIC</label>
       <div class="field">
         <input id="nama" placeholder="Ketik nama PIC atau tekan mic" required autocapitalize="characters">
-        <button type="button" class="ib" id="micNama" title="Rekam suara" aria-label="Rekam suara nama PIC">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg>
-        </button>
+        <button type="button" class="ib" id="micNama" aria-label="Rekam suara nama PIC"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg></button>
       </div>
       <div class="hint" id="hNama"></div>
 
-      <!-- INVOICE -->
       <label for="invoice">No. Invoice</label>
       <div class="field">
         <input id="invoice" placeholder="INV123456789" required autocapitalize="characters">
-        <button type="button" class="ib blue" id="btnScan" title="Scan barcode" aria-label="Scan barcode">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 8v8M11 8v8M15 8v8M18 8v8"/></svg>
-        </button>
-        <button type="button" class="ib" id="micInv" title="Rekam suara" aria-label="Rekam suara invoice">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg>
-        </button>
+        <button type="button" class="ib blue" id="btnScan" aria-label="Scan barcode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 8v8M11 8v8M15 8v8M18 8v8"/></svg></button>
+        <button type="button" class="ib" id="micInv" aria-label="Rekam suara invoice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg></button>
       </div>
       <div class="hint" id="hInv"></div>
 
       <div class="row">
         <div>
           <label for="pengiriman">Pengiriman</label>
-          <select id="pengiriman" style="transform:translateZ(14px)">
+          <select id="pengiriman">
             <option value="">-- Pilih --</option>
             <option>JNE</option><option>SPX</option><option>SPX INSTAN</option>
             <option>J&amp;T</option><option>J N T EXPRESS</option><option>JNT CARGO</option>
@@ -244,48 +175,69 @@
       </div>
 
       <label>Foto (maks 4)</label>
-      <div class="fotos">
-        <div class="foto" data-i="0"><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><br>Foto 1</div><img alt=""><span class="n">1</span><button type="button" class="x">×</button></div>
-        <div class="foto" data-i="1"><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><br>Foto 2</div><img alt=""><span class="n">2</span><button type="button" class="x">×</button></div>
-        <div class="foto" data-i="2"><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><br>Foto 3</div><img alt=""><span class="n">3</span><button type="button" class="x">×</button></div>
-        <div class="foto" data-i="3"><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><br>Foto 4</div><img alt=""><span class="n">4</span><button type="button" class="x">×</button></div>
-      </div>
+      <div class="fotos" id="fotos"></div>
 
       <button class="save" id="btn" type="submit"><span class="spin"></span><span id="btnTxt">SIMPAN DATA</span></button>
     </form>
+  </div></div>
+
+  <!-- ===== MONITORING ===== -->
+  <div class="view" id="vMon">
+    <div class="bar">
+      <input type="date" id="tgl" aria-label="Filter tanggal">
+      <select id="pic" aria-label="Filter PIC"><option value="">Semua PIC</option></select>
+      <select id="kurir" aria-label="Filter pengiriman"><option value="">Semua pengiriman</option></select>
+      <input type="search" id="q" placeholder="Cari invoice" aria-label="Cari invoice">
+      <button id="reset" type="button">Tampilkan semua</button>
+      <button id="reload" type="button" style="background:#2a8fe6">Muat ulang</button>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="list" id="list"></div>
   </div>
 </div>
 
-<!-- SCANNER -->
-<div id="scan">
-  <div class="sbox">
-    <h3>Scan Barcode Invoice</h3>
-    <p>Arahkan kamera ke barcode / QR pada resi atau invoice.</p>
-    <div id="reader"></div>
-    <button class="close" id="closeScan" type="button">TUTUP</button>
-  </div>
-</div>
-
-<!-- PILIH SUMBER FOTO -->
-<div id="sheet"><div class="sh">
-  <h4>Tambah Foto</h4>
+<div id="scan"><div class="sbox"><h3>Scan Barcode Invoice</h3><p>Arahkan kamera ke barcode / QR pada resi atau invoice.</p><div id="reader"></div><button class="close" id="closeScan" type="button">TUTUP</button></div></div>
+<div id="sheet"><div class="sh"><h4>Tambah Foto</h4>
   <button type="button" id="shCam">📷 Ambil Foto Langsung</button>
   <button type="button" id="shGal">🖼️ Pilih dari Galeri / Folder</button>
-  <button type="button" class="c" id="shX">Batal</button>
-</div></div>
-
+  <button type="button" class="c" id="shX">Batal</button></div></div>
+<div id="lb"><img alt=""></div>
 <div id="toast"></div>
 
 <script>
 // ====== KONFIGURASI ======
 const API_URL = 'https://script.google.com/macros/s/AKfycbz_dwOslJTKQbqs8D_RtvxpOLIIFZfa_EvGaGHT4zKfyGKtck6SVqA-zo1FwnvYTjYwOQ/exec';
-const SECRET  = 'rahasia123'; // samakan dengan Code.gs
+const SECRET  = 'rahasia123';
 
 const $ = id => document.getElementById(id);
 const fotos = [null, null, null, null];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let tt;
+function toast(msg, ok) { const t = $('toast'); t.textContent = msg; t.className = (ok ? 'ok' : 'err') + ' show'; clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 4500); }
 
-/* ---------- Tanggal & jam otomatis (terkunci) ---------- */
-const HARI  = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+/* ---------- Tab ---------- */
+function fitSub() {
+  const h = document.querySelector('h1'), s = document.querySelector('.sub');
+  s.style.fontSize = '20px';
+  const ls = parseFloat(getComputedStyle(s).letterSpacing) || 0, cur = s.offsetWidth - ls;
+  if (cur > 0 && h.offsetWidth > 0) s.style.fontSize = (20 * h.offsetWidth / cur) + 'px';
+}
+let monLoaded = false;
+function show(tab) {
+  const mon = tab === 'mon';
+  $('vIn').classList.toggle('on', !mon); $('vMon').classList.toggle('on', mon);
+  $('tabIn').classList.toggle('on', !mon); $('tabMon').classList.toggle('on', mon);
+  $('wrap').classList.toggle('wide', mon);
+  history.replaceState(null, '', mon ? '#monitoring' : '#input');
+  if (mon && !monLoaded) loadMon();
+}
+$('tabIn').onclick = () => show('in');
+$('tabMon').onclick = () => show('mon');
+fitSub(); window.addEventListener('load', fitSub); window.addEventListener('resize', fitSub);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitSub);
+
+/* ---------- Tanggal ---------- */
+const HARI = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
 const BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 const pad = n => String(n).padStart(2, '0');
 function tick() {
@@ -294,80 +246,34 @@ function tick() {
   $('tTxt').textContent = pad(n.getHours()) + ':' + pad(n.getMinutes()) + ':' + pad(n.getSeconds());
 }
 tick(); setInterval(tick, 1000);
-function todayISO() { const n = new Date(); return n.getFullYear() + '-' + pad(n.getMonth() + 1) + '-' + pad(n.getDate()); }
+const todayISO = () => { const n = new Date(); return n.getFullYear() + '-' + pad(n.getMonth() + 1) + '-' + pad(n.getDate()); };
 
-/* ---------- Samakan lebar "AZ·KO SIDOARJO" dengan judul ---------- */
-function fitSub() {
-  const h = document.querySelector('h1'), s = document.querySelector('.sub');
-  s.style.fontSize = '20px';
-  const ls = parseFloat(getComputedStyle(s).letterSpacing) || 0;
-  const cur = s.offsetWidth - ls;
-  if (cur > 0) s.style.fontSize = (20 * h.offsetWidth / cur) + 'px';
-}
-fitSub();
-window.addEventListener('load', fitSub);
-window.addEventListener('resize', fitSub);
-if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitSub);
-
-/* ---------- Toast ---------- */
-let tt;
-function toast(msg, ok) {
-  const t = $('toast'); t.textContent = msg; t.className = (ok ? 'ok' : 'err') + ' show';
-  clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 4500);
-}
-
-/* ---------- Efek tilt 3D kartu (desktop) ---------- */
-if (matchMedia('(pointer:fine)').matches) {
-  const c = $('card');
-  document.addEventListener('mousemove', e => {
-    const x = (e.clientX / innerWidth - .5), y = (e.clientY / innerHeight - .5);
-    c.style.transform = `perspective(1400px) rotateY(${x * 6}deg) rotateX(${-y * 5}deg)`;
-  });
-  document.addEventListener('mouseleave', () => c.style.transform = '');
-}
-
-/* ---------- Nama PIC & Invoice ---------- */
+/* ---------- Nama, invoice, koli ---------- */
 $('nama').value = localStorage.getItem('pic') || '';
 $('nama').addEventListener('input', e => e.target.value = e.target.value.toUpperCase());
 $('invoice').addEventListener('input', e => e.target.value = e.target.value.toUpperCase().replace(/\s+/g, ''));
-
-/* ---------- Stepper koli ---------- */
 $('min').onclick  = () => $('koli').value = Math.max(1, (+$('koli').value || 1) - 1);
 $('plus').onclick = () => $('koli').value = (+$('koli').value || 0) + 1;
 
-/* ---------- Perekam suara (speech to text) ---------- */
+/* ---------- Suara ---------- */
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 const ANGKA = {nol:0,kosong:0,satu:1,dua:2,tiga:3,empat:4,lima:5,enam:6,tujuh:7,delapan:8,sembilan:9};
 const HURUF = {ai:'i',en:'n',ve:'v',fi:'v',pe:'p'};
-function normInvoice(s) {
-  return s.toLowerCase().split(/\s+/).map(w => (w in ANGKA) ? ANGKA[w] : (w in HURUF) ? HURUF[w] : w).join('')
-          .replace(/[^a-z0-9]/g, '').toUpperCase();
-}
+const normInvoice = s => s.toLowerCase().split(/\s+/).map(w => (w in ANGKA) ? ANGKA[w] : (w in HURUF) ? HURUF[w] : w).join('').replace(/[^a-z0-9]/g, '').toUpperCase();
 function voice(btn, input, hint, mode) {
-  if (!SR || !window.isSecureContext) {
-    toast('Perekam suara hanya jalan di Chrome lewat alamat https. Jangan buka dari WhatsApp/Instagram, buka lewat Chrome.', false);
-    return;
-  }
+  if (!SR || !window.isSecureContext) return toast('Perekam suara hanya jalan di Chrome lewat alamat https. Buka lewat Chrome, bukan dari WhatsApp/Instagram.', false);
   if (btn._rec) { btn._rec.stop(); return; }
   const rec = new SR();
   rec.lang = 'id-ID'; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 1;
   btn._rec = rec; btn.classList.add('rec'); hint.textContent = '🎙️ Mendengarkan... silakan bicara';
   let finalText = '';
   rec.onresult = e => {
-    let txt = '';
-    for (let i = 0; i < e.results.length; i++) txt += e.results[i][0].transcript;
-    finalText = txt;
-    input.value = mode === 'inv' ? normInvoice(txt) : txt.toUpperCase().trim();
-    hint.textContent = '🎙️ ' + txt;
+    let txt = ''; for (let i = 0; i < e.results.length; i++) txt += e.results[i][0].transcript;
+    finalText = txt; input.value = mode === 'inv' ? normInvoice(txt) : txt.toUpperCase().trim(); hint.textContent = '🎙️ ' + txt;
   };
   rec.onerror = e => {
     hint.textContent = '';
-    const m = {
-      'not-allowed': 'Izin mikrofon ditolak. Aktifkan di pengaturan situs.',
-      'service-not-allowed': 'Layanan suara diblokir di browser ini. Pakai Chrome.',
-      'no-speech': 'Suara tidak terdengar, coba lagi.',
-      'network': 'Perekam suara butuh internet.'
-    };
+    const m = {'not-allowed':'Izin mikrofon ditolak. Aktifkan di pengaturan situs.','service-not-allowed':'Layanan suara diblokir di browser ini. Pakai Chrome.','no-speech':'Suara tidak terdengar, coba lagi.','network':'Perekam suara butuh internet.'};
     toast(m[e.error] || ('Suara gagal dikenali: ' + e.error), false);
   };
   rec.onend = () => {
@@ -375,13 +281,12 @@ function voice(btn, input, hint, mode) {
     if (finalText) hint.textContent = '✔ Terdeteksi: ' + (mode === 'inv' ? normInvoice(finalText) : finalText.toUpperCase());
     setTimeout(() => { if (!btn._rec) hint.textContent = ''; }, 3500);
   };
-  try { rec.start(); }
-  catch (e) { btn._rec = null; btn.classList.remove('rec'); toast('Tidak bisa memulai mic: ' + e.message, false); }
+  try { rec.start(); } catch (e) { btn._rec = null; btn.classList.remove('rec'); toast('Tidak bisa memulai mic: ' + e.message, false); }
 }
 $('micNama').onclick = () => voice($('micNama'), $('nama'), $('hNama'), 'nama');
-$('micInv').onclick  = () => voice($('micInv'),  $('invoice'), $('hInv'), 'inv');
+$('micInv').onclick  = () => voice($('micInv'), $('invoice'), $('hInv'), 'inv');
 
-/* ---------- Scanner barcode ---------- */
+/* ---------- Scanner ---------- */
 let qr = null;
 function loadLib() {
   return new Promise((res, rej) => {
@@ -392,57 +297,35 @@ function loadLib() {
     document.head.appendChild(s);
   });
 }
-async function stopScan() {
-  $('scan').classList.remove('open');
-  if (qr) { try { await qr.stop(); qr.clear(); } catch (e) {} qr = null; }
-}
-function cleanInv(t) {
-  t = t.toUpperCase().replace(/\s+/g, '');
-  const m = t.match(/INV\d+/);
-  return m ? m[0] : t;
-}
+async function stopScan() { $('scan').classList.remove('open'); if (qr) { try { await qr.stop(); qr.clear(); } catch (e) {} qr = null; } }
+function cleanInv(t) { t = t.toUpperCase().replace(/\s+/g, ''); const m = t.match(/INV\d+/); return m ? m[0] : t; }
 $('btnScan').onclick = async () => {
   try {
     if (!window.isSecureContext || !navigator.mediaDevices) throw new Error('Kamera hanya bisa lewat https. Buka lewat Chrome, bukan dari dalam aplikasi lain.');
     await loadLib();
     $('scan').classList.add('open');
     const F = Html5QrcodeSupportedFormats;
-    qr = new Html5Qrcode('reader', {
-      formatsToSupport: [F.CODE_128, F.CODE_39, F.CODE_93, F.EAN_13, F.EAN_8, F.UPC_A, F.ITF, F.CODABAR, F.QR_CODE],
-      experimentalFeatures: { useBarCodeDetectorIfSupported: true },
-      verbose: false
-    });
-    const onOk = text => {
-      $('invoice').value = cleanInv(text);
-      if (navigator.vibrate) navigator.vibrate(120);
-      stopScan(); toast('✅ Barcode terbaca: ' + $('invoice').value, true);
-    };
-    const cfg = { fps: 10, qrbox: (w) => ({ width: Math.floor(w * .85), height: Math.floor(w * .4) }) };
+    qr = new Html5Qrcode('reader', { formatsToSupport: [F.CODE_128, F.CODE_39, F.CODE_93, F.EAN_13, F.EAN_8, F.UPC_A, F.ITF, F.CODABAR, F.QR_CODE], experimentalFeatures: { useBarCodeDetectorIfSupported: true }, verbose: false });
+    const onOk = text => { $('invoice').value = cleanInv(text); if (navigator.vibrate) navigator.vibrate(120); stopScan(); toast('✅ Barcode terbaca: ' + $('invoice').value, true); };
+    const cfg = { fps: 10, qrbox: w => ({ width: Math.floor(w * .85), height: Math.floor(w * .4) }) };
     try {
-      await qr.start({ facingMode: 'environment' },
-        { ...cfg, videoConstraints: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 }, advanced: [{ focusMode: 'continuous' }] } },
-        onOk, () => {});
-    } catch (e1) {
-      await qr.start({ facingMode: 'environment' }, cfg, onOk, () => {});
-    }
-  } catch (err) {
-    stopScan();
-    toast(err.message || 'Kamera tidak bisa dibuka. Izinkan akses kamera.', false);
-  }
+      await qr.start({ facingMode: 'environment' }, { ...cfg, videoConstraints: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 }, advanced: [{ focusMode: 'continuous' }] } }, onOk, () => {});
+    } catch (e1) { await qr.start({ facingMode: 'environment' }, cfg, onOk, () => {}); }
+  } catch (err) { stopScan(); toast(err.message || 'Kamera tidak bisa dibuka. Izinkan akses kamera.', false); }
 };
 $('closeScan').onclick = stopScan;
 
-/* ---------- Foto (kamera langsung / galeri) ---------- */
+/* ---------- Foto ---------- */
+const CAM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
+$('fotos').innerHTML = [1, 2, 3, 4].map((n, i) => '<div class="foto" data-i="' + i + '"><div>' + CAM + '<br>Foto ' + n + '</div><img alt=""><span class="n">' + n + '</span><button type="button" class="x">×</button></div>').join('');
 function compress(file, max = 1280, q = 0.7) {
   return new Promise(res => {
     const img = new Image(), url = URL.createObjectURL(file);
     img.onload = () => {
-      const s = Math.min(1, max / Math.max(img.width, img.height));
-      const c = document.createElement('canvas');
+      const s = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement('canvas');
       c.width = img.width * s; c.height = img.height * s;
       c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-      const d = c.toDataURL('image/jpeg', q);
-      URL.revokeObjectURL(url);
+      const d = c.toDataURL('image/jpeg', q); URL.revokeObjectURL(url);
       res({ data: d.split(',')[1], type: 'image/jpeg', preview: d });
     };
     img.onerror = () => { URL.revokeObjectURL(url); res(null); };
@@ -451,85 +334,91 @@ function compress(file, max = 1280, q = 0.7) {
 }
 const boxes = [...document.querySelectorAll('.foto')];
 const camIn = document.createElement('input'), galIn = document.createElement('input');
-camIn.type = galIn.type = 'file';
-camIn.accept = galIn.accept = 'image/*';
-camIn.capture = 'environment';
-galIn.multiple = true;
-camIn.style.display = galIn.style.display = 'none';
-document.body.append(camIn, galIn);
+camIn.type = galIn.type = 'file'; camIn.accept = galIn.accept = 'image/*'; camIn.capture = 'environment'; galIn.multiple = true;
+camIn.style.display = galIn.style.display = 'none'; document.body.append(camIn, galIn);
 let slot = 0;
-
 async function addFiles(files, start) {
-  const order = [start, ...[0, 1, 2, 3].filter(k => k !== start && !fotos[k])];
-  const list = [...files];
+  const order = [start, ...[0, 1, 2, 3].filter(k => k !== start && !fotos[k])], list = [...files];
   for (let k = 0; k < list.length && k < order.length; k++) {
     const r = await compress(list[k]);
     if (!r) { toast('Foto tidak bisa dibaca (format tidak didukung)', false); continue; }
-    const i = order[k];
-    fotos[i] = { data: r.data, type: r.type };
-    boxes[i].querySelector('img').src = r.preview;
-    boxes[i].classList.add('has');
+    const i = order[k]; fotos[i] = { data: r.data, type: r.type };
+    boxes[i].querySelector('img').src = r.preview; boxes[i].classList.add('has');
   }
   if (list.length > order.length) toast('Maksimal 4 foto', false);
 }
 camIn.onchange = async () => { if (camIn.files.length) await addFiles(camIn.files, slot); camIn.value = ''; };
 galIn.onchange = async () => { if (galIn.files.length) await addFiles(galIn.files, slot); galIn.value = ''; };
-
 boxes.forEach(box => {
   const i = +box.dataset.i;
-  box.addEventListener('click', e => {
-    if (e.target.classList.contains('x')) return;
-    slot = i; $('sheet').classList.add('open');
-  });
-  box.querySelector('.x').addEventListener('click', e => {
-    e.stopPropagation(); fotos[i] = null;
-    box.querySelector('img').removeAttribute('src'); box.classList.remove('has');
-  });
+  box.addEventListener('click', e => { if (e.target.classList.contains('x')) return; slot = i; $('sheet').classList.add('open'); });
+  box.querySelector('.x').addEventListener('click', e => { e.stopPropagation(); fotos[i] = null; box.querySelector('img').removeAttribute('src'); box.classList.remove('has'); });
 });
 $('shCam').onclick = () => { $('sheet').classList.remove('open'); camIn.click(); };
 $('shGal').onclick = () => { $('sheet').classList.remove('open'); galIn.click(); };
-$('shX').onclick   = () => $('sheet').classList.remove('open');
+$('shX').onclick = () => $('sheet').classList.remove('open');
 $('sheet').addEventListener('click', e => { if (e.target.id === 'sheet') $('sheet').classList.remove('open'); });
 
 /* ---------- Kirim ---------- */
 $('f').addEventListener('submit', async e => {
   e.preventDefault();
-  const btn = $('btn');
-  const nama = $('nama').value.trim(), invoice = $('invoice').value.trim();
-  if (!nama)    return toast('Nama PIC wajib diisi', false);
+  const btn = $('btn'), nama = $('nama').value.trim(), invoice = $('invoice').value.trim();
+  if (!nama) return toast('Nama PIC wajib diisi', false);
   if (!invoice) return toast('No. Invoice wajib diisi', false);
   if (!fotos.some(Boolean) && !confirm('Belum ada foto. Tetap simpan?')) return;
-
   btn.disabled = true; $('btnTxt').textContent = 'MENYIMPAN...';
-  const payload = {
-    key: SECRET,
-    tanggal: todayISO(),
-    nama, invoice,
-    pengiriman: $('pengiriman').value,
-    koli: $('koli').value,
-    fotos
-  };
   try {
-    const resp = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // hindari preflight CORS
-      body: JSON.stringify(payload)
-    });
+    const resp = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ key: SECRET, tanggal: todayISO(), nama, invoice, pengiriman: $('pengiriman').value, koli: $('koli').value, fotos }) });
     const r = await resp.json();
     if (r.status !== 'success') throw new Error(r.message);
-
-    localStorage.setItem('pic', nama);
+    localStorage.setItem('pic', nama); monLoaded = false;
     toast('✅ Tersimpan! ID: ' + r.id + ' (baris ' + r.row + ')', true);
     $('invoice').value = ''; $('koli').value = 1; $('pengiriman').value = '';
     boxes.forEach(b => { b.querySelector('img').removeAttribute('src'); b.classList.remove('has'); });
-    fotos.fill(null);
-    $('invoice').focus();
-  } catch (err) {
-    toast('❌ Gagal: ' + err.message, false);
-  } finally {
-    btn.disabled = false; $('btnTxt').textContent = 'SIMPAN DATA';
-  }
+    fotos.fill(null); $('invoice').focus();
+  } catch (err) { toast('❌ Gagal: ' + err.message, false); }
+  finally { btn.disabled = false; $('btnTxt').textContent = 'SIMPAN DATA'; }
 });
+
+/* ---------- Monitoring ---------- */
+let DATA = [];
+const fileId = u => { const m = String(u).match(/\/d\/([^/?]+)/) || String(u).match(/[?&]id=([^&]+)/); return m ? m[1] : ''; };
+const thumb = (u, w) => 'https://drive.google.com/thumbnail?id=' + fileId(u) + '&sz=w' + w;
+const tglID = iso => { const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? m[3] + '/' + m[2] + '/' + m[1] : iso; };
+
+async function loadMon() {
+  $('list').innerHTML = '<div class="msg">Memuat data...</div>';
+  try {
+    const r = await fetch(API_URL + '?action=list&key=' + encodeURIComponent(SECRET));
+    const j = await r.json();
+    if (j.status !== 'success') throw new Error(j.message || 'Respon API tidak valid');
+    DATA = j.data.slice().reverse(); monLoaded = true;
+    const uniq = k => [...new Set(DATA.map(d => d[k]).filter(Boolean))].sort();
+    const set = (id, label, arr) => { const cur = $(id).value; $(id).innerHTML = '<option value="">' + label + '</option>' + arr.map(v => '<option>' + esc(v) + '</option>').join(''); $(id).value = arr.includes(cur) ? cur : ''; };
+    set('pic', 'Semua PIC', uniq('pic')); set('kurir', 'Semua pengiriman', uniq('pengiriman'));
+    renderMon();
+  } catch (e) { $('list').innerHTML = '<div class="msg err">Gagal memuat data: ' + esc(e.message) + '</div>'; }
+}
+function renderMon() {
+  const t = $('tgl').value, p = $('pic').value, k = $('kurir').value, q = $('q').value.trim().toUpperCase();
+  const rows = DATA.filter(d => (!t || d.tanggal === t) && (!p || d.pic === p) && (!k || d.pengiriman === k) && (!q || String(d.invoice).toUpperCase().includes(q)));
+  $('stats').innerHTML = '<span>Data: <b>' + rows.length + '</b> dari ' + DATA.length + '</span><span>Total koli: <b>' + rows.reduce((a, d) => a + (d.koli || 0), 0) + '</b></span><span>Total foto: <b>' + rows.reduce((a, d) => a + d.fotos.length, 0) + '</b></span>';
+  if (!rows.length) { $('list').innerHTML = '<div class="msg">Tidak ada data untuk filter ini. Tekan "Tampilkan semua" untuk melihat semua data.</div>'; return; }
+  $('list').innerHTML = rows.slice(0, 300).map(d => {
+    const ph = d.fotos.length ? d.fotos.map(u => '<a href="' + esc(u) + '" data-big="' + esc(thumb(u, 1200)) + '"><img loading="lazy" src="' + esc(thumb(u, 200)) + '" alt="Foto ' + esc(d.invoice) + '"></a>').join('') : '<span class="none">Tidak ada foto</span>';
+    return '<article class="item"><div class="top"><span class="inv">' + esc(d.invoice) + '</span><span class="meta">' + esc(tglID(d.tanggal)) + '</span></div>' +
+      '<div class="meta">PIC: <b>' + esc(d.pic || '-') + '</b> &nbsp; Pengiriman: <b>' + esc(d.pengiriman || '-') + '</b> &nbsp; Koli: <b>' + (d.koli || 0) + '</b></div><div class="ph">' + ph + '</div></article>';
+  }).join('') + (rows.length > 300 ? '<div class="msg">Menampilkan 300 data terbaru. Gunakan filter untuk mempersempit.</div>' : '');
+}
+['tgl', 'pic', 'kurir'].forEach(id => $(id).addEventListener('change', renderMon));
+$('q').addEventListener('input', renderMon);
+$('reset').onclick = () => { $('tgl').value = ''; $('pic').value = ''; $('kurir').value = ''; $('q').value = ''; renderMon(); };
+$('reload').onclick = loadMon;
+$('list').addEventListener('click', e => { const a = e.target.closest('a[data-big]'); if (!a) return; e.preventDefault(); $('lb').querySelector('img').src = a.dataset.big; $('lb').classList.add('open'); });
+$('lb').onclick = () => $('lb').classList.remove('open');
+
+if (location.hash === '#monitoring') show('mon');
 </script>
 </body>
 </html>
