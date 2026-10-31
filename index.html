@@ -116,7 +116,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 #guide{position:absolute;left:3%;width:94%;top:30%;height:40%;border:2px solid rgba(255,255,255,.92);border-radius:12px;box-shadow:0 0 0 999px rgba(0,0,0,.45);pointer-events:none}
 #guide::after{content:"";position:absolute;left:6px;right:6px;top:50%;height:2px;background:#ff4560;box-shadow:0 0 8px #ff4560;animation:ln 1.6s ease-in-out infinite alternate}
 @keyframes ln{from{top:12%}to{top:88%}}
-#sInfo{white-space:pre-line;margin-top:4px;font-size:11px;color:#5d7096;text-align:center}
+#sInfo{white-space:pre-line;overflow-wrap:anywhere;margin-top:4px;font-size:11px;color:#5d7096;text-align:center}
 #sMsg{min-height:34px;margin:10px 2px 0;font-size:12.5px;font-weight:700;color:#8fa3c4;text-align:center;line-height:1.35}
 #zoomRow{display:none;align-items:center;gap:10px;margin-top:8px;font-size:13px;font-weight:700}
 .sbox input[type=range]{padding:0;border:0;box-shadow:none;background:transparent;accent-color:#10c88a;-webkit-appearance:auto;appearance:auto;height:28px}
@@ -325,7 +325,7 @@ td.no{color:var(--mut);width:56px}td.inv{font-weight:800;word-break:break-all}td
 <!-- scanner -->
 <div id="scan"><div class="sbox">
   <h3>Scan Barcode Invoice</h3>
-  <p>Letakkan barcode <b>INV</b> (paling atas pada resi) di dalam kotak. Dekatkan sampai barcode hampir memenuhi lebar kotak, lalu tahan sebentar. Ketuk layar untuk fokus.</p>
+  <p>Arahkan ke barcode <b>INV</b> (paling atas pada resi). Jaga jarak HP sekitar <b>20-30 cm</b> sampai tulisan INV terlihat <b>tajam</b>, lalu tahan. Jangan terlalu dekat. Ketuk layar untuk fokus ulang.</p>
   <div id="vwrap"><video id="vid" playsinline muted autoplay></video><div id="guide"></div></div>
   <div id="sMsg" aria-live="polite"></div>
   <div id="sInfo"></div>
@@ -559,6 +559,15 @@ let fmtInfo = '', stream = null, track = null, caps = {}, loopT = 0, scanId = 0,
 const vid = $('vid'), cnv = document.createElement('canvas'), cctx = cnv.getContext('2d', { willReadFrequently: true });
 const pickInv = t => { const m = String(t).toUpperCase().replace(/\s+/g, '').match(/INV\d{6,}/); return m ? m[0] : ''; };
 const sMsg = (t, err) => { const m = $('sMsg'); m.textContent = t; m.style.color = err ? '#ff9aa8' : '#8fa3c4'; };
+const shC = document.createElement('canvas'), shX = shC.getContext('2d', { willReadFrequently: true });
+let shMax = 0;
+function sharpness() {          // rata-rata perubahan terang-gelap horizontal: makin tinggi makin tajam
+  const c = cropRect(), w = 240, h = Math.max(24, Math.round(w * c.sh / c.sw));
+  shC.width = w; shC.height = h; shX.drawImage(vid, c.sx, c.sy, c.sw, c.sh, 0, 0, w, h);
+  const d = shX.getImageData(0, 0, w, h).data; let sum = 0, n = 0;
+  for (let y = 0; y < h; y += 2) for (let x = 0; x < w - 1; x++) { const i = (y * w + x) * 4; sum += Math.abs(d[i] - d[i + 4]); n++; }
+  return sum / n;
+}
 const G = { x: .03, w: .94, y: .30, h: .40 };   // kotak panduan (pecahan dari area video)
 
 function loadZX() {
@@ -648,6 +657,13 @@ async function tick(id) {
   } catch (e) {}
   if (id !== scanId) return;
   handle(found, seen);
+  if (!found && !seen && tickN % 4 === 0 && vid.videoWidth) {
+    try {
+      const sh = sharpness(); shMax = Math.max(shMax * .997, sh);
+      if (sh < shMax * .6 || sh < 6) sMsg('Gambar buram. Jauhkan HP 5-10 cm lalu ketuk layar untuk fokus ulang.', true);
+      else sMsg('Gambar tajam. Tahan HP, pastikan barcode INV di dalam kotak.');
+    } catch (e) {}
+  }
   loopT = setTimeout(() => tick(id), det ? 90 : 130);
 }
 const adv = o => track ? track.applyConstraints({ advanced: [o] }).catch(() => {}) : Promise.resolve();
@@ -683,7 +699,7 @@ async function startCam() {
     if (caps.focusMode && caps.focusMode.includes('continuous')) await adv({ focusMode: 'continuous' });
     if (caps.zoom && caps.zoom.max > caps.zoom.min) {
       const zr = $('zoom'); zr.min = caps.zoom.min; zr.max = caps.zoom.max; zr.step = caps.zoom.step || 0.1;
-      zr.value = Math.min(caps.zoom.max, Math.max(caps.zoom.min, 2));
+      zr.value = caps.zoom.min;
       adv({ zoom: +zr.value }); zr.oninput = () => adv({ zoom: +zr.value });
       $('zoomRow').style.display = 'flex';
     }
@@ -692,7 +708,7 @@ async function startCam() {
       b.onclick = async () => { torchOn = !torchOn; await adv({ torch: torchOn }); b.classList.toggle('on', torchOn); };
     }
     const st = track.getSettings ? track.getSettings() : {};
-    $('sInfo').textContent = 'v4 · ' + (st.width || vid.videoWidth) + '×' + (st.height || vid.videoHeight) + ' · ' + (det ? 'detektor bawaan + ZXing' : 'ZXing') + (fmtInfo ? '\nformat: ' + fmtInfo : '');
+    $('sInfo').textContent = 'v5 · ' + (st.width || vid.videoWidth) + '×' + (st.height || vid.videoHeight) + ' · ' + (det ? 'detektor bawaan + ZXing' : 'ZXing') + (fmtInfo ? '\nformat: ' + fmtInfo : '');
     sMsg('Arahkan ke barcode INV paling atas');
     tick(id);
   } catch (err) {
@@ -707,11 +723,17 @@ async function startCam() {
     $('sRetry').style.display = '';
   }
 }
-$('vwrap').addEventListener('click', async () => {      // ketuk untuk fokus ulang
-  if (caps.focusMode && caps.focusMode.includes('single-shot')) {
-    await adv({ focusMode: 'single-shot' });
-    setTimeout(() => { if (caps.focusMode.includes('continuous')) adv({ focusMode: 'continuous' }); }, 1500);
-  }
+$('vwrap').addEventListener('click', async e => {      // ketuk untuk fokus ulang di titik yang disentuh
+  if (!track || !vid.videoWidth) return;
+  const r = vid.getBoundingClientRect(), vw = vid.videoWidth, vh = vid.videoHeight;
+  const sc = Math.max(r.width / vw, r.height / vh), ox = (vw * sc - r.width) / 2, oy = (vh * sc - r.height) / 2;
+  const x = Math.min(1, Math.max(0, ((e.clientX - r.left) + ox) / sc / vw)), y = Math.min(1, Math.max(0, ((e.clientY - r.top) + oy) / sc / vh));
+  const fm = caps.focusMode || [];
+  shMax = 0; sMsg('Memfokus...');
+  await adv({ pointsOfInterest: [{ x, y }] });
+  if (fm.includes('single-shot')) await adv({ focusMode: 'single-shot' });
+  else if (fm.includes('manual') && fm.includes('continuous')) await adv({ focusMode: 'manual' });   // pindah mode memicu fokus ulang
+  setTimeout(() => { if (fm.includes('continuous')) adv({ focusMode: 'continuous' }); }, 1200);
 });
 $('btnScan').onclick = () => { $('scan').classList.add('open'); startCam(); };
 $('sRetry').onclick = startCam;
