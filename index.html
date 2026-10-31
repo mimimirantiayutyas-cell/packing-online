@@ -105,11 +105,20 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .qchip{min-height:18px;margin:12px 2px 0;font-size:12.5px;font-weight:700;color:#0a6fb8;text-align:center}
 #toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translate(-50%,120px);max-width:92vw;padding:14px 20px;border-radius:14px;font-weight:700;font-size:14px;z-index:120;box-shadow:0 14px 34px rgba(20,33,61,.35);transition:transform .35s cubic-bezier(.2,1.2,.4,1)}
 #toast.show{transform:translate(-50%,0)}#toast.ok{background:#10c88a;color:#032a1e}#toast.err{background:#ff4560;color:#fff}
-#scan{position:fixed;inset:0;z-index:50;background:rgba(3,7,16,.92);display:none;flex-direction:column;align-items:center;justify-content:center;padding:18px}
+
+/* scanner */
+#scan{position:fixed;inset:0;z-index:50;background:rgba(3,7,16,.94);display:none;flex-direction:column;align-items:center;justify-content:center;padding:14px;overflow:auto}
 #scan.open{display:flex}
-.sbox{width:100%;max-width:440px;background:#0d1730;border:1px solid rgba(255,255,255,.14);border-radius:22px;padding:16px;color:#e9f0ff}
-.sbox h3{margin:0 0 4px;font-size:17px}.sbox p{margin:0 0 12px;font-size:12.5px;color:#8fa3c4}
-#reader{width:100%;border-radius:14px;overflow:hidden;background:#000;min-height:220px}
+.sbox{width:100%;max-width:480px;background:#0d1730;border:1px solid rgba(255,255,255,.14);border-radius:22px;padding:16px;color:#e9f0ff}
+.sbox h3{margin:0 0 4px;font-size:17px}.sbox p{margin:0 0 10px;font-size:12.5px;color:#8fa3c4}
+#reader{width:100%;border-radius:14px;overflow:hidden;background:#000;min-height:240px}
+#reader video{width:100%!important;object-fit:cover}
+#sMsg{min-height:34px;margin:10px 2px 0;font-size:12.5px;font-weight:700;color:#8fa3c4;text-align:center;line-height:1.35}
+#zoomRow{display:none;align-items:center;gap:10px;margin-top:8px;font-size:13px;font-weight:700}
+.sbox input[type=range]{padding:0;border:0;box-shadow:none;background:transparent;accent-color:#10c88a;-webkit-appearance:auto;appearance:auto;height:28px}
+.stools{display:flex;gap:10px;margin-top:8px}
+.stools button{flex:1;padding:12px;border:0;border-radius:12px;font:800 14px 'Inter',sans-serif;cursor:pointer;color:#04223d;background:linear-gradient(180deg,#5cc0ff,#2a8fe6);box-shadow:0 4px 0 #1b64a8}
+.stools button.on{background:linear-gradient(180deg,#ffe27a,#ffc533);box-shadow:0 4px 0 #b88a0a;color:#3a2a00}
 .close{width:100%;margin-top:14px;padding:14px;border:0;border-radius:14px;font:800 15px 'Inter',sans-serif;cursor:pointer;color:#fff;background:linear-gradient(180deg,#ff7b8d,#ff4560);box-shadow:0 5px 0 #b02338}
 
 /* monitoring */
@@ -171,8 +180,8 @@ td.no{color:var(--mut);width:56px}td.inv{font-weight:800;word-break:break-all}td
 @media (max-width:760px){.lbstage{padding:0 6px}.lnav{width:38px;height:54px;opacity:.8}}
 
 /* modal edit */
-#ed{position:fixed;inset:0;z-index:100;background:rgba(3,7,16,.6);display:none;align-items:center;justify-content:center;padding:16px}
-#ed.open{display:flex}
+#ed,#ue{position:fixed;inset:0;z-index:100;background:rgba(3,7,16,.6);display:none;align-items:center;justify-content:center;padding:16px}
+#ed.open,#ue.open{display:flex}
 .edb{width:100%;max-width:440px;background:#fff;border-radius:20px;padding:20px 18px 18px;box-shadow:0 30px 60px rgba(0,0,0,.35)}
 .edb h4{margin:0 0 2px;font-size:17px}
 .edb .meta{font-size:12px;color:var(--mut)}
@@ -191,7 +200,7 @@ td.no{color:var(--mut);width:56px}td.inv{font-weight:800;word-break:break-all}td
     <div class="titlebox"><h1>Packing Online</h1><div class="sub">AZ·KO SIDOARJO</div></div>
   </div>
 
-  <!-- ===== LOGIN (2 langkah: NIP lalu Enter, nama muncul, ketik password) ===== -->
+  <!-- ===== LOGIN ===== -->
   <div id="vLogin"><div class="card">
     <h2 class="lt">Masuk</h2>
     <form id="lf" autocomplete="on">
@@ -309,7 +318,17 @@ td.no{color:var(--mut);width:56px}td.inv{font-weight:800;word-break:break-all}td
   </div>
 </div>
 
-<div id="scan"><div class="sbox"><h3>Scan Barcode Invoice</h3><p>Arahkan kamera ke barcode / QR pada resi atau invoice.</p><div id="reader"></div><button class="close" id="closeScan" type="button">TUTUP</button></div></div>
+<!-- scanner -->
+<div id="scan"><div class="sbox">
+  <h3>Scan Barcode Invoice</h3>
+  <p>Arahkan ke barcode <b>INV</b> paling atas pada resi (bukan barcode SKU). Jaga HP tegak lurus, jarak sekitar 15-25 cm.</p>
+  <div id="reader"></div>
+  <div id="sMsg" aria-live="polite"></div>
+  <div id="zoomRow"><span>🔍 Zoom</span><input type="range" id="zoom" min="1" max="1" step="0.1" value="1"></div>
+  <div class="stools"><button type="button" id="torchBtn" style="display:none">🔦 Lampu</button><button type="button" id="sRetry" style="display:none">🔄 Coba lagi</button></div>
+  <button class="close" id="closeScan" type="button">TUTUP</button>
+</div></div>
+
 <div id="sheet"><div class="sh"><h4>Tambah Foto</h4>
   <button type="button" id="shCam">📷 Ambil Foto Langsung</button>
   <button type="button" id="shGal">🖼️ Pilih dari Galeri / Folder</button>
@@ -332,7 +351,7 @@ td.no{color:var(--mut);width:56px}td.inv{font-weight:800;word-break:break-all}td
   <div class="dots" id="lbDots"></div>
 </div>
 
-<!-- modal edit -->
+<!-- modal edit data -->
 <div id="ed"><div class="edb">
   <h4>Edit Data</h4><div class="meta" id="eMeta"></div>
   <label for="eInv">No. Invoice</label>
@@ -343,16 +362,24 @@ td.no{color:var(--mut);width:56px}td.inv{font-weight:800;word-break:break-all}td
   </div>
   <div class="edact"><button type="button" id="eCancel">Batal</button><button type="button" class="ok" id="eSave">Simpan</button></div>
 </div></div>
+
+<!-- modal edit pengguna -->
+<div id="ue"><div class="edb">
+  <h4>Edit Pengguna</h4><div class="meta" id="ueMeta"></div>
+  <label for="ueNip">NIP</label><input id="ueNip" autocomplete="off">
+  <label for="ueNama">Nama</label><input id="ueNama" autocapitalize="characters" autocomplete="off">
+  <label for="ueRole">Peran</label><select id="ueRole"><option value="staff">Petugas</option><option value="admin">Admin</option></select>
+  <div class="edact"><button type="button" id="ueCancel">Batal</button><button type="button" class="ok" id="ueSave">Simpan</button></div>
+</div></div>
 <div id="toast"></div>
 
 <script>
 // ====== KONFIGURASI ======
-// Setelah deploy "Versi baru" pada deployment yang sama, URL ini tetap sama.
 const API_URL = 'https://script.google.com/macros/s/AKfycbz_dwOslJTKQbqs8D_RtvxpOLIIFZfa_EvGaGHT4zKfyGKtck6SVqA-zo1FwnvYTjYwOQ/exec';
 
 const $ = id => document.getElementById(id);
 const fotos = [null, null, null, null];
-const CACHE = new Map();      // cache hasil monitoring per filter+halaman
+const CACHE = new Map();
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const lsGet = k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } };
@@ -378,7 +405,7 @@ async function api(body) {
 }
 
 /* ---------- Login 2 langkah ---------- */
-let stepNip = '';   // NIP yang sudah dikenali (langkah 2 aktif)
+let stepNip = '';
 async function postRaw(body) {
   const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
   const j = await r.json();
@@ -399,13 +426,13 @@ $('lf').addEventListener('submit', async e => {
   if (!nip) return;
   const b = $('lBtn'); $('lErr').textContent = ''; b.disabled = true;
   try {
-    if (!stepNip) {                                   // langkah 1: cari nama dari NIP
+    if (!stepNip) {
       $('lTxt').textContent = 'MENCARI...';
       const j = await postRaw({ action: 'lookup', nip });
       stepNip = nip; $('lNama').value = j.nama;
       $('lStep2').style.display = '';
       $('lPass').focus();
-    } else {                                          // langkah 2: login
+    } else {
       const pass = $('lPass').value;
       if (!pass) { $('lErr').textContent = 'Password wajib diisi'; $('lPass').focus(); return; }
       $('lTxt').textContent = 'MEMERIKSA...';
@@ -430,12 +457,14 @@ function enterApp() {
   $('nama').value = S.nama; $('nama').readOnly = !admin; $('micNama').style.display = admin ? '' : 'none';
   show(location.hash === '#monitoring' ? 'mon' : 'in');
   fitSub();
-  setTimeout(() => { if (S) loadMon(); }, 1500);   // siapkan data monitoring di latar belakang
+  setTimeout(() => { if (S) loadMon(); }, 1500);
+  setTimeout(() => { loadLib().catch(() => {}); }, 2500);   // siapkan library scanner di latar belakang
 }
 function logout(msg) {
   S = null; lsDel('sess'); lsDel('mon0');
   Q.length = 0; CACHE.clear(); CUR = []; monLoaded = false; picsLoaded = false; wantKey = '';
   if (reqCtl) reqCtl.abort();
+  stopScan();
   resetLogin(); $('lNip').value = '';
   document.body.classList.remove('in'); $('wrap').classList.remove('wide');
   $('lErr').textContent = typeof msg === 'string' ? msg : '';
@@ -517,36 +546,125 @@ function voice(btn, input, hint, mode) {
 $('micNama').onclick = () => voice($('micNama'), $('nama'), $('hNama'), 'nama');
 $('micInv').onclick  = () => voice($('micInv'), $('invoice'), $('hInv'), 'inv');
 
-/* ---------- Scanner (library baru dimuat saat dipakai) ---------- */
-let qr = null;
+/* ================= SCANNER (lanjutan) =================
+   - resolusi tinggi bertingkat (1080p > 720p > standar) agar iPhone/Android yang menolak constraint tetap jalan
+   - fokus kontinu, zoom, dan lampu senter bila didukung perangkat
+   - hanya CODE_128 + QR, hanya hasil berpola INV+angka (barcode SKU diabaikan)
+   - harus terbaca 2x berturut-turut yang sama sebelum diterima (mencegah nomor "loncat") */
+let qr = null, libP = null, lastHit = '', lastAt = 0, hitCnt = 0, torchOn = false, scanToken = 0;
+const pickInv = t => { const m = String(t).toUpperCase().replace(/\s+/g, '').match(/INV\d{6,}/); return m ? m[0] : ''; };
+const sMsg = (t, err) => { const m = $('sMsg'); m.textContent = t; m.style.color = err ? '#ff9aa8' : '#8fa3c4'; };
+
 function loadLib() {
-  return new Promise((res, rej) => {
-    if (window.Html5Qrcode) return res();
+  if (window.Html5Qrcode) return Promise.resolve();
+  if (libP) return libP;
+  libP = new Promise((res, rej) => {
     const s = document.createElement('script');
     s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js';
-    s.onload = res; s.onerror = () => rej(new Error('Gagal memuat library scanner. Cek internet.'));
+    s.onload = res;
+    s.onerror = () => { libP = null; rej(new Error('Gagal memuat library scanner. Cek internet.')); };
     document.head.appendChild(s);
   });
+  return libP;
 }
-async function stopScan() { $('scan').classList.remove('open'); if (qr) { try { await qr.stop(); qr.clear(); } catch (e) {} qr = null; } }
-function cleanInv(t) { t = t.toUpperCase().replace(/\s+/g, ''); const m = t.match(/INV\d+/); return m ? m[0] : t; }
-$('btnScan').onclick = async () => {
+function beep() {
   try {
-    if (!window.isSecureContext || !navigator.mediaDevices) throw new Error('Kamera hanya bisa lewat https. Buka lewat Chrome, bukan dari dalam aplikasi lain.');
+    const A = window.AudioContext || window.webkitAudioContext, c = new A(), o = c.createOscillator(), g = c.createGain();
+    o.type = 'square'; o.frequency.value = 1500; g.gain.value = .08; o.connect(g); g.connect(c.destination); o.start();
+    setTimeout(() => { try { o.stop(); c.close(); } catch (e) {} }, 110);
+  } catch (e) {}
+}
+async function killCam() {
+  if (qr) { const q = qr; qr = null; try { await q.stop(); } catch (e) {} try { q.clear(); } catch (e) {} }
+}
+async function stopScan() {
+  scanToken++; torchOn = false; lastHit = ''; hitCnt = 0;
+  $('scan').classList.remove('open');
+  $('zoomRow').style.display = 'none'; $('torchBtn').style.display = 'none'; $('torchBtn').classList.remove('on'); $('sRetry').style.display = 'none';
+  await killCam();
+}
+function gotInv(inv) {
+  $('invoice').value = inv; beep(); if (navigator.vibrate) navigator.vibrate(120);
+  stopScan(); toast('✅ Barcode terbaca: ' + inv, true);
+}
+function setupTools() {
+  $('zoomRow').style.display = 'none'; $('torchBtn').style.display = 'none';
+  let caps; try { caps = qr.getRunningTrackCameraCapabilities(); } catch (e) { return; }
+  try {
+    const z = caps.zoomFeature();
+    if (z && z.isSupported()) {
+      const zr = $('zoom'); zr.min = z.min(); zr.max = z.max(); zr.step = z.step() || 0.1; zr.value = z.min();
+      zr.oninput = () => { try { z.apply(+zr.value); } catch (e) {} };
+      $('zoomRow').style.display = 'flex';
+    }
+  } catch (e) {}
+  try {
+    const t = caps.torchFeature();
+    if (t && t.isSupported()) {
+      const b = $('torchBtn'); b.style.display = '';
+      b.onclick = async () => { try { torchOn = !torchOn; await t.apply(torchOn); b.classList.toggle('on', torchOn); } catch (e) { torchOn = false; b.classList.remove('on'); } };
+    }
+  } catch (e) {}
+}
+async function startCam() {
+  const my = ++scanToken;
+  $('sRetry').style.display = 'none'; sMsg('Membuka kamera...');
+  try {
+    if (!window.isSecureContext || !navigator.mediaDevices) throw new Error('Kamera hanya bisa lewat https. Buka lewat Safari (iPhone) atau Chrome (Android), bukan dari dalam WhatsApp/Instagram.');
     await loadLib();
-    $('scan').classList.add('open');
+    await killCam();
     const F = Html5QrcodeSupportedFormats;
-    qr = new Html5Qrcode('reader', { formatsToSupport: [F.CODE_128, F.CODE_39, F.CODE_93, F.EAN_13, F.EAN_8, F.UPC_A, F.ITF, F.CODABAR, F.QR_CODE], experimentalFeatures: { useBarCodeDetectorIfSupported: true }, verbose: false });
-    const onOk = text => { $('invoice').value = cleanInv(text); if (navigator.vibrate) navigator.vibrate(120); stopScan(); toast('✅ Barcode terbaca: ' + $('invoice').value, true); };
-    const cfg = { fps: 10, qrbox: w => ({ width: Math.floor(w * .85), height: Math.floor(w * .4) }) };
-    try {
-      await qr.start({ facingMode: 'environment' }, { ...cfg, videoConstraints: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 }, advanced: [{ focusMode: 'continuous' }] } }, onOk, () => {});
-    } catch (e1) { await qr.start({ facingMode: 'environment' }, cfg, onOk, () => {}); }
-  } catch (err) { stopScan(); toast(err.message || 'Kamera tidak bisa dibuka. Izinkan akses kamera.', false); }
-};
+    const make = () => new Html5Qrcode('reader', { formatsToSupport: [F.CODE_128, F.QR_CODE], experimentalFeatures: { useBarCodeDetectorIfSupported: true }, verbose: false });
+    const onOk = text => {
+      if (my !== scanToken) return;
+      const inv = pickInv(text); if (!inv) return;              // abaikan barcode SKU / lainnya
+      const now = Date.now();
+      if (inv === lastHit && now - lastAt < 2000) hitCnt++; else { lastHit = inv; hitCnt = 1; }
+      lastAt = now; sMsg('Membaca ' + inv + '...');
+      if (hitCnt >= 2) gotInv(inv);
+    };
+    const cfg = { fps: 15, disableFlip: true, qrbox: w => ({ width: Math.floor(w * .92), height: Math.floor(w * .42) }) };
+    const tries = [
+      { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
+      { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+      { facingMode: 'environment' },
+      null
+    ];
+    let ok = false, lastErr;
+    for (const vc of tries) {
+      if (my !== scanToken) return;
+      try {
+        qr = make();
+        await qr.start({ facingMode: 'environment' }, vc ? { ...cfg, videoConstraints: vc } : cfg, onOk, () => {});
+        ok = true; break;
+      } catch (e) {
+        lastErr = e; try { qr.clear(); } catch (x) {} qr = null;
+        const s = String((e && e.message) || e);
+        if (/NotAllowed|Permission|denied/i.test((e && e.name) + s)) break;   // izin ditolak: tidak perlu coba ulang
+      }
+    }
+    if (!ok) throw lastErr || new Error('Kamera tidak bisa dibuka');
+    if (my !== scanToken) { killCam(); return; }
+    try { await qr.applyVideoConstraints({ advanced: [{ focusMode: 'continuous' }] }); } catch (e) {}
+    setupTools();
+    sMsg('Arahkan ke barcode INV paling atas');
+  } catch (err) {
+    if (my !== scanToken) return;
+    const raw = String((err && err.message) || err || '');
+    let m = raw;
+    if (/NotAllowed|Permission|denied/i.test((err && err.name) + raw)) m = 'Izin kamera ditolak. iPhone: Pengaturan > Safari > Kamera > Izinkan. Android: ketuk ikon gembok di address bar > Izin > Kamera.';
+    else if (/NotFound|Devices not found|Requested device/i.test((err && err.name) + raw)) m = 'Kamera tidak ditemukan di perangkat ini.';
+    else if (/NotReadable|TrackStart|in use/i.test((err && err.name) + raw)) m = 'Kamera sedang dipakai aplikasi lain. Tutup aplikasi itu lalu coba lagi.';
+    sMsg(m || 'Kamera tidak bisa dibuka.', true);
+    $('sRetry').style.display = '';
+  }
+}
+$('btnScan').onclick = () => { $('scan').classList.add('open'); startCam(); };
+$('sRetry').onclick = startCam;
 $('closeScan').onclick = stopScan;
+document.addEventListener('visibilitychange', () => { if (document.hidden && $('scan').classList.contains('open')) stopScan(); });
 
-/* ---------- Foto (dikompres paralel, lebih kecil = upload lebih cepat) ---------- */
+/* ---------- Foto ---------- */
 const CAM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
 $('fotos').innerHTML = [1, 2, 3, 4].map((n, i) => '<div class="foto" data-i="' + i + '"><div>' + CAM + '<br>Foto ' + n + '</div><img alt=""><span class="n">' + n + '</span><button type="button" class="x">×</button></div>').join('');
 async function toBitmap(file) {
@@ -596,7 +714,7 @@ $('shGal').onclick = () => { $('sheet').classList.remove('open'); galIn.click();
 $('shX').onclick = () => $('sheet').classList.remove('open');
 $('sheet').addEventListener('click', e => { if (e.target.id === 'sheet') $('sheet').classList.remove('open'); });
 
-/* ---------- Kirim: form langsung kosong, data dikirim lewat antrean di latar belakang ---------- */
+/* ---------- Kirim (antrean latar belakang) ---------- */
 const Q = []; let sending = false;
 function chip() { $('qchip').textContent = Q.length ? '⏳ Mengirim ' + Q.length + ' data di latar belakang...' : ''; }
 function sentOk(inv) { CACHE.clear(); monLoaded = false; picsLoaded = false; toast('✅ Tersimpan: ' + inv, true); }
@@ -612,7 +730,6 @@ async function pump() {
       if (!S) break;
       if (err.retry && it.tries < 3) { it.tries++; await sleep(1500 * it.tries); continue; }
       Q.shift();
-      // percobaan ulang yang ternyata sudah masuk di percobaan sebelumnya
       if (it.tries > 0 && /sudah pernah diinput/.test(err.message)) sentOk(it.body.invoice);
       else toast('❌ ' + it.body.invoice + ' gagal: ' + err.message, false);
     }
@@ -637,7 +754,7 @@ $('f').addEventListener('submit', e => {
   chip(); pump();
 });
 
-/* ================= MONITORING (ringan: paging & filter di server) ================= */
+/* ================= MONITORING ================= */
 const PER = 20;
 let CUR = [], page = 1, pages = 1, reqCtl = null, wantKey = '';
 const fileId = u => { const m = String(u).match(/\/d\/([^/?]+)/) || String(u).match(/[?&]id=([^&]+)/); return m ? m[1] : ''; };
@@ -648,7 +765,6 @@ const cleanPic = s => String(s || '').replace(/^\s*PACKING\s*ONLINE\s*:?\s*/i, '
 const emptyRow = (t, c) => '<tr><td colspan="8" class="msg ' + (c || '') + '">' + t + '</td></tr>';
 const DEF_KEY = new URLSearchParams({ action: 'list', page: 1, per: PER, tgl: '', pic: '', kurir: '', q: '' }).toString();
 
-// opsi pengiriman: salin dari form input
 const kurirOpts = [...$('pengiriman').options].filter(o => o.value);
 $('kurir').innerHTML = '<option value="">Semua pengiriman</option>' + kurirOpts.map(o => '<option value="' + esc(o.value) + '">' + esc(o.value) + '</option>').join('');
 $('ePeng').innerHTML = '<option value="">-</option>' + kurirOpts.map(o => '<option value="' + esc(o.value) + '">' + esc(o.value) + '</option>').join('');
@@ -671,12 +787,12 @@ async function loadMon(force) {
   if (!S) return;
   const key = new URLSearchParams({ action: 'list', page, per: PER, ...filters() }).toString();
   if (!force && CACHE.has(key)) { wantKey = key; applyData(CACHE.get(key)); return; }
-  if (!force && key === wantKey && reqCtl) return;           // permintaan yang sama sedang berjalan
+  if (!force && key === wantKey && reqCtl) return;
   if (reqCtl) reqCtl.abort();
   wantKey = key; reqCtl = new AbortController();
   const ctl = reqCtl, wrap = $('tbwrap');
   if (!CUR.length) {
-    const stale = key === DEF_KEY ? lsGet('mon0') : null;     // tampilkan data terakhir dulu, segarkan di belakang
+    const stale = key === DEF_KEY ? lsGet('mon0') : null;
     if (stale) applyData(stale); else $('list').innerHTML = emptyRow('Memuat data...');
   }
   if (CUR.length) wrap.classList.add('busy');
@@ -709,7 +825,6 @@ function applyData(j) {
     : '';
 }
 
-// Hanya 1 thumbnail per baris (+ jumlah sisanya); semua foto tampil di galeri saat diklik.
 function renderTable() {
   if (!CUR.length) { $('list').innerHTML = emptyRow('Tidak ada data untuk filter ini. Tekan "Tampilkan semua" untuk melihat semua data.'); return; }
   const from = (page - 1) * PER;
@@ -734,7 +849,7 @@ $('reset').onclick = () => { $('tgl').value = ''; $('pic').value = ''; $('kurir'
 $('reload').onclick = () => { CACHE.clear(); picsLoaded = false; loadPics(); loadMon(true); };
 $('pager').addEventListener('click', e => { const b = e.target.closest('button[data-p]'); if (!b) return; page += +b.dataset.p; loadMon(); $('tbwrap').scrollTop = 0; });
 
-/* ---------- Galeri foto (geser + unduh) ---------- */
+/* ---------- Galeri foto ---------- */
 let LB = { urls: [], i: 0, title: '' };
 const lbImg = $('lbImg');
 function lbShow() {
@@ -765,6 +880,8 @@ $('lbStage').addEventListener('click', e => { if (e.target.id === 'lbStage') lbC
 document.addEventListener('keydown', e => {
   if ($('lb').classList.contains('open')) { if (e.key === 'ArrowLeft') lbGo(-1); else if (e.key === 'ArrowRight') lbGo(1); else if (e.key === 'Escape') lbClose(); }
   else if ($('ed').classList.contains('open') && e.key === 'Escape') $('ed').classList.remove('open');
+  else if ($('ue').classList.contains('open') && e.key === 'Escape') $('ue').classList.remove('open');
+  else if ($('scan').classList.contains('open') && e.key === 'Escape') stopScan();
 });
 let sx = 0, sy = 0;
 $('lb').addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
@@ -807,10 +924,13 @@ $('eSave').onclick = async () => {
 };
 
 /* ---------- Pengguna (khusus admin) ---------- */
+let UL = [], UE = '';
 function renderUsers(list) {
+  UL = list;
   $('uList').innerHTML = list.length ? list.map(u =>
     '<div class="urow' + (u.aktif ? '' : ' off') + '"><div class="ui"><b>' + esc(u.nama) + '</b><div class="meta">NIP ' + esc(u.nip) + ' · ' + (u.role === 'admin' ? 'Admin' : 'Petugas') + (u.aktif ? '' : ' · Nonaktif') + '</div></div>' +
-    '<div class="uact"><button type="button" class="ebtn" data-a="pw" data-n="' + esc(u.nip) + '">Reset password</button>' +
+    '<div class="uact"><button type="button" class="ebtn" data-a="edit" data-n="' + esc(u.nip) + '">✏️ Edit</button>' +
+    '<button type="button" class="ebtn" data-a="pw" data-n="' + esc(u.nip) + '">Reset password</button>' +
     '<button type="button" class="ebtn" data-a="tog" data-n="' + esc(u.nip) + '" data-v="' + (u.aktif ? 0 : 1) + '">' + (u.aktif ? 'Nonaktifkan' : 'Aktifkan') + '</button>' +
     '<button type="button" class="ebtn dng" data-a="del" data-n="' + esc(u.nip) + '">Hapus</button></div></div>').join('')
     : '<div class="msg">Belum ada pengguna.</div>';
@@ -832,6 +952,13 @@ $('uf').addEventListener('submit', async e => {
 $('uList').addEventListener('click', async e => {
   const b = e.target.closest('button[data-a]'); if (!b) return;
   const nip = b.dataset.n, a = b.dataset.a; let body;
+  if (a === 'edit') {
+    const u = UL.find(x => x.nip === nip); if (!u) return;
+    UE = nip; $('ueMeta').textContent = 'NIP saat ini: ' + nip;
+    $('ueNip').value = u.nip; $('ueNip').disabled = (nip === S.nip);
+    $('ueNama').value = u.nama; $('ueRole').value = u.role;
+    $('ue').classList.add('open'); return;
+  }
   if (a === 'pw') { const p = prompt('Password baru untuk NIP ' + nip + ' (minimal 6 karakter):'); if (!p) return; body = { action: 'user_update', nip, password: p }; }
   else if (a === 'tog') body = { action: 'user_update', nip, aktif: b.dataset.v === '1' };
   else { if (!confirm('Hapus pengguna NIP ' + nip + '?')) return; body = { action: 'user_delete', nip }; }
@@ -839,6 +966,20 @@ $('uList').addEventListener('click', async e => {
   try { renderUsers((await api(body)).users); toast('✅ Berhasil', true); }
   catch (err) { toast('❌ ' + err.message, false); b.disabled = false; }
 });
+$('ueNama').addEventListener('input', e => e.target.value = e.target.value.toUpperCase());
+$('ueCancel').onclick = () => $('ue').classList.remove('open');
+$('ue').addEventListener('click', e => { if (e.target.id === 'ue') $('ue').classList.remove('open'); });
+$('ueSave').onclick = async () => {
+  const nip = $('ueNip').value.trim(), nama = $('ueNama').value.trim().toUpperCase();
+  if (!nip || !nama) return toast('NIP dan nama wajib diisi', false);
+  const b = $('ueSave'); b.disabled = true;
+  try {
+    const j = await api({ action: 'user_update', nip: UE, newNip: nip, nama, role: $('ueRole').value });
+    if (UE === S.nip) { S.nama = nama; lsSet('sess', S); $('uInfo').textContent = '👤 ' + S.nama + ' · ' + (S.role === 'admin' ? 'Admin' : 'Petugas'); $('nama').value = S.nama; }
+    renderUsers(j.users); $('ue').classList.remove('open'); toast('✅ Pengguna diperbarui', true);
+  } catch (err) { toast('❌ ' + err.message, false); }
+  finally { b.disabled = false; }
+};
 
 /* ---------- Mulai ---------- */
 if (S) enterApp();
