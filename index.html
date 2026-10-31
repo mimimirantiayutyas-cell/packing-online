@@ -116,7 +116,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 #guide{position:absolute;left:3%;width:94%;top:30%;height:40%;border:2px solid rgba(255,255,255,.92);border-radius:12px;box-shadow:0 0 0 999px rgba(0,0,0,.45);pointer-events:none}
 #guide::after{content:"";position:absolute;left:6px;right:6px;top:50%;height:2px;background:#ff4560;box-shadow:0 0 8px #ff4560;animation:ln 1.6s ease-in-out infinite alternate}
 @keyframes ln{from{top:12%}to{top:88%}}
-#sInfo{margin-top:4px;font-size:11px;color:#5d7096;text-align:center}
+#sInfo{white-space:pre-line;margin-top:4px;font-size:11px;color:#5d7096;text-align:center}
 #sMsg{min-height:34px;margin:10px 2px 0;font-size:12.5px;font-weight:700;color:#8fa3c4;text-align:center;line-height:1.35}
 #zoomRow{display:none;align-items:center;gap:10px;margin-top:8px;font-size:13px;font-weight:700}
 .sbox input[type=range]{padding:0;border:0;box-shadow:none;background:transparent;accent-color:#10c88a;-webkit-appearance:auto;appearance:auto;height:28px}
@@ -555,7 +555,7 @@ $('micInv').onclick  = () => voice($('micInv'), $('invoice'), $('hInv'), 'inv');
    Mesin: BarcodeDetector bawaan Chrome/Android (sangat kuat) + ZXing (iPhone/Safari & cadangan).
    - resolusi setinggi mungkin (1440p > 1080p > 720p), fokus kontinu, zoom awal 2x, ketuk untuk fokus, lampu senter
    - hanya hasil berpola INV+angka yang diterima; harus sama 2x berturut-turut */
-let stream = null, track = null, caps = {}, loopT = 0, scanId = 0, lastHit = '', lastAt = 0, hitCnt = 0, torchOn = false, tickN = 0, det = null, zxR = null, zxP = null;
+let fmtInfo = '', stream = null, track = null, caps = {}, loopT = 0, scanId = 0, lastHit = '', lastAt = 0, hitCnt = 0, torchOn = false, tickN = 0, det = null, zxR = null, zxP = null;
 const vid = $('vid'), cnv = document.createElement('canvas'), cctx = cnv.getContext('2d', { willReadFrequently: true });
 const pickInv = t => { const m = String(t).toUpperCase().replace(/\s+/g, '').match(/INV\d{6,}/); return m ? m[0] : ''; };
 const sMsg = (t, err) => { const m = $('sMsg'); m.textContent = t; m.style.color = err ? '#ff9aa8' : '#8fa3c4'; };
@@ -581,7 +581,7 @@ function zxDecode(canvas) {
     const Z = window.ZXing;
     if (!zxR) {
       const h = new Map();
-      h.set(Z.DecodeHintType.POSSIBLE_FORMATS, [Z.BarcodeFormat.CODE_128, Z.BarcodeFormat.QR_CODE]);
+      h.set(Z.DecodeHintType.POSSIBLE_FORMATS, [Z.BarcodeFormat.CODE_128, Z.BarcodeFormat.CODE_39, Z.BarcodeFormat.CODE_93, Z.BarcodeFormat.ITF, Z.BarcodeFormat.CODABAR, Z.BarcodeFormat.EAN_13, Z.BarcodeFormat.EAN_8, Z.BarcodeFormat.UPC_A, Z.BarcodeFormat.UPC_E, Z.BarcodeFormat.QR_CODE, Z.BarcodeFormat.DATA_MATRIX]);
       h.set(Z.DecodeHintType.TRY_HARDER, true);
       zxR = new Z.MultiFormatReader(); zxR.setHints(h);
     }
@@ -635,10 +635,10 @@ async function tick(id) {
       if (det) {
         try {
           const r = await det.detect(vid);
-          for (const b of r) { const t = b.rawValue || ''; if (!seen) seen = t; const i = pickInv(t); if (i) { found = i; break; } }
+          for (const b of r) { const t = b.rawValue || ''; if (!seen) seen = '[' + b.format + '] ' + t; const i = pickInv(t); if (i) { found = i; break; } }
         } catch (e) { det = null; }
       }
-      if (!found && window.ZXing && (!det || tickN % 3 === 0)) {
+      if (!found && window.ZXing && (!det || tickN % 2 === 0)) {
         const c = cropRect(), k = tickN % 2 ? Math.min(1, 1280 / c.sw) : 1;   // selang-seling: resolusi penuh & diperkecil
         cnv.width = Math.max(1, Math.round(c.sw * k)); cnv.height = Math.max(1, Math.round(c.sh * k));
         cctx.drawImage(vid, c.sx, c.sy, c.sw, c.sh, 0, 0, cnv.width, cnv.height);
@@ -661,7 +661,7 @@ async function startCam() {
     if ('BarcodeDetector' in window) {
       try {
         const f = await BarcodeDetector.getSupportedFormats();
-        if (f.includes('code_128')) det = new BarcodeDetector({ formats: ['code_128', 'qr_code'].filter(x => f.includes(x)) });
+        if (f.length) { det = new BarcodeDetector({ formats: f }); fmtInfo = f.join(','); }   // semua format yang didukung HP
       } catch (e) { det = null; }
     }
     const zx = loadZX();
@@ -692,7 +692,7 @@ async function startCam() {
       b.onclick = async () => { torchOn = !torchOn; await adv({ torch: torchOn }); b.classList.toggle('on', torchOn); };
     }
     const st = track.getSettings ? track.getSettings() : {};
-    $('sInfo').textContent = 'v3 · ' + (st.width || vid.videoWidth) + '×' + (st.height || vid.videoHeight) + ' · ' + (det ? 'detektor bawaan + ZXing' : 'ZXing');
+    $('sInfo').textContent = 'v4 · ' + (st.width || vid.videoWidth) + '×' + (st.height || vid.videoHeight) + ' · ' + (det ? 'detektor bawaan + ZXing' : 'ZXing') + (fmtInfo ? '\nformat: ' + fmtInfo : '');
     sMsg('Arahkan ke barcode INV paling atas');
     tick(id);
   } catch (err) {
