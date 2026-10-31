@@ -111,8 +111,12 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 #scan.open{display:flex}
 .sbox{width:100%;max-width:480px;background:#0d1730;border:1px solid rgba(255,255,255,.14);border-radius:22px;padding:16px;color:#e9f0ff}
 .sbox h3{margin:0 0 4px;font-size:17px}.sbox p{margin:0 0 10px;font-size:12.5px;color:#8fa3c4}
-#reader{width:100%;border-radius:14px;overflow:hidden;background:#000;min-height:240px}
-#reader video{width:100%!important;object-fit:cover}
+#vwrap{position:relative;width:100%;aspect-ratio:3/4;max-height:60vh;border-radius:14px;overflow:hidden;background:#000}
+#vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#guide{position:absolute;left:3%;width:94%;top:30%;height:40%;border:2px solid rgba(255,255,255,.92);border-radius:12px;box-shadow:0 0 0 999px rgba(0,0,0,.45);pointer-events:none}
+#guide::after{content:"";position:absolute;left:6px;right:6px;top:50%;height:2px;background:#ff4560;box-shadow:0 0 8px #ff4560;animation:ln 1.6s ease-in-out infinite alternate}
+@keyframes ln{from{top:12%}to{top:88%}}
+#sInfo{margin-top:4px;font-size:11px;color:#5d7096;text-align:center}
 #sMsg{min-height:34px;margin:10px 2px 0;font-size:12.5px;font-weight:700;color:#8fa3c4;text-align:center;line-height:1.35}
 #zoomRow{display:none;align-items:center;gap:10px;margin-top:8px;font-size:13px;font-weight:700}
 .sbox input[type=range]{padding:0;border:0;box-shadow:none;background:transparent;accent-color:#10c88a;-webkit-appearance:auto;appearance:auto;height:28px}
@@ -321,9 +325,10 @@ td.no{color:var(--mut);width:56px}td.inv{font-weight:800;word-break:break-all}td
 <!-- scanner -->
 <div id="scan"><div class="sbox">
   <h3>Scan Barcode Invoice</h3>
-  <p>Arahkan ke barcode <b>INV</b> paling atas pada resi (bukan barcode SKU). Jaga HP tegak lurus, jarak sekitar 15-25 cm.</p>
-  <div id="reader"></div>
+  <p>Letakkan barcode <b>INV</b> (paling atas pada resi) di dalam kotak. Dekatkan sampai barcode hampir memenuhi lebar kotak, lalu tahan sebentar. Ketuk layar untuk fokus.</p>
+  <div id="vwrap"><video id="vid" playsinline muted autoplay></video><div id="guide"></div></div>
   <div id="sMsg" aria-live="polite"></div>
+  <div id="sInfo"></div>
   <div id="zoomRow"><span>🔍 Zoom</span><input type="range" id="zoom" min="1" max="1" step="0.1" value="1"></div>
   <div class="stools"><button type="button" id="torchBtn" style="display:none">🔦 Lampu</button><button type="button" id="sRetry" style="display:none">🔄 Coba lagi</button></div>
   <button class="close" id="closeScan" type="button">TUTUP</button>
@@ -458,7 +463,7 @@ function enterApp() {
   show(location.hash === '#monitoring' ? 'mon' : 'in');
   fitSub();
   setTimeout(() => { if (S) loadMon(); }, 1500);
-  setTimeout(() => { loadLib().catch(() => {}); }, 2500);   // siapkan library scanner di latar belakang
+  setTimeout(() => { loadZX().catch(() => {}); }, 2500);   // siapkan library scanner di latar belakang
 }
 function logout(msg) {
   S = null; lsDel('sess'); lsDel('mon0');
@@ -546,26 +551,48 @@ function voice(btn, input, hint, mode) {
 $('micNama').onclick = () => voice($('micNama'), $('nama'), $('hNama'), 'nama');
 $('micInv').onclick  = () => voice($('micInv'), $('invoice'), $('hInv'), 'inv');
 
-/* ================= SCANNER (lanjutan) =================
-   - resolusi tinggi bertingkat (1080p > 720p > standar) agar iPhone/Android yang menolak constraint tetap jalan
-   - fokus kontinu, zoom, dan lampu senter bila didukung perangkat
-   - hanya CODE_128 + QR, hanya hasil berpola INV+angka (barcode SKU diabaikan)
-   - harus terbaca 2x berturut-turut yang sama sebelum diterima (mencegah nomor "loncat") */
-let qr = null, libP = null, lastHit = '', lastAt = 0, hitCnt = 0, torchOn = false, scanToken = 0;
+/* ================= SCANNER v3 =================
+   Mesin: BarcodeDetector bawaan Chrome/Android (sangat kuat) + ZXing (iPhone/Safari & cadangan).
+   - resolusi setinggi mungkin (1440p > 1080p > 720p), fokus kontinu, zoom awal 2x, ketuk untuk fokus, lampu senter
+   - hanya hasil berpola INV+angka yang diterima; harus sama 2x berturut-turut */
+let stream = null, track = null, caps = {}, loopT = 0, scanId = 0, lastHit = '', lastAt = 0, hitCnt = 0, torchOn = false, tickN = 0, det = null, zxR = null, zxP = null;
+const vid = $('vid'), cnv = document.createElement('canvas'), cctx = cnv.getContext('2d', { willReadFrequently: true });
 const pickInv = t => { const m = String(t).toUpperCase().replace(/\s+/g, '').match(/INV\d{6,}/); return m ? m[0] : ''; };
 const sMsg = (t, err) => { const m = $('sMsg'); m.textContent = t; m.style.color = err ? '#ff9aa8' : '#8fa3c4'; };
+const G = { x: .03, w: .94, y: .30, h: .40 };   // kotak panduan (pecahan dari area video)
 
-function loadLib() {
-  if (window.Html5Qrcode) return Promise.resolve();
-  if (libP) return libP;
-  libP = new Promise((res, rej) => {
-    const s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js';
-    s.onload = res;
-    s.onerror = () => { libP = null; rej(new Error('Gagal memuat library scanner. Cek internet.')); };
-    document.head.appendChild(s);
+function loadZX() {
+  if (window.ZXing) return Promise.resolve();
+  if (zxP) return zxP;
+  const urls = ['https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js', 'https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js'];
+  zxP = new Promise((res, rej) => {
+    let i = 0;
+    const next = () => {
+      if (i >= urls.length) { zxP = null; return rej(new Error('Gagal memuat library scanner. Cek internet lalu coba lagi.')); }
+      const s = document.createElement('script'); s.src = urls[i++];
+      s.onload = () => window.ZXing ? res() : next(); s.onerror = next; document.head.appendChild(s);
+    };
+    next();
   });
-  return libP;
+  return zxP;
+}
+function zxDecode(canvas) {
+  try {
+    const Z = window.ZXing;
+    if (!zxR) {
+      const h = new Map();
+      h.set(Z.DecodeHintType.POSSIBLE_FORMATS, [Z.BarcodeFormat.CODE_128, Z.BarcodeFormat.QR_CODE]);
+      h.set(Z.DecodeHintType.TRY_HARDER, true);
+      zxR = new Z.MultiFormatReader(); zxR.setHints(h);
+    }
+    const bm = new Z.BinaryBitmap(new Z.HybridBinarizer(new Z.HTMLCanvasElementLuminanceSource(canvas)));
+    return zxR.decodeWithState(bm).getText() || '';
+  } catch (e) { return ''; }
+}
+function cropRect() {
+  const cw = vid.clientWidth, ch = vid.clientHeight, vw = vid.videoWidth, vh = vid.videoHeight;
+  const sc = Math.max(cw / vw, ch / vh), ox = (vw * sc - cw) / 2, oy = (vh * sc - ch) / 2;
+  return { sx: (cw * G.x + ox) / sc, sy: (ch * G.y + oy) / sc, sw: cw * G.w / sc, sh: ch * G.h / sc };
 }
 function beep() {
   try {
@@ -574,91 +601,118 @@ function beep() {
     setTimeout(() => { try { o.stop(); c.close(); } catch (e) {} }, 110);
   } catch (e) {}
 }
-async function killCam() {
-  if (qr) { const q = qr; qr = null; try { await q.stop(); } catch (e) {} try { q.clear(); } catch (e) {} }
+function killCam() {
+  clearTimeout(loopT);
+  if (stream) { stream.getTracks().forEach(t => { try { t.stop(); } catch (e) {} }); stream = null; }
+  track = null; caps = {}; try { vid.srcObject = null; } catch (e) {}
 }
-async function stopScan() {
-  scanToken++; torchOn = false; lastHit = ''; hitCnt = 0;
+function stopScan() {
+  scanId++; torchOn = false; lastHit = ''; hitCnt = 0;
   $('scan').classList.remove('open');
   $('zoomRow').style.display = 'none'; $('torchBtn').style.display = 'none'; $('torchBtn').classList.remove('on'); $('sRetry').style.display = 'none';
-  await killCam();
+  killCam();
 }
 function gotInv(inv) {
   $('invoice').value = inv; beep(); if (navigator.vibrate) navigator.vibrate(120);
   stopScan(); toast('✅ Barcode terbaca: ' + inv, true);
 }
-function setupTools() {
-  $('zoomRow').style.display = 'none'; $('torchBtn').style.display = 'none';
-  let caps; try { caps = qr.getRunningTrackCameraCapabilities(); } catch (e) { return; }
-  try {
-    const z = caps.zoomFeature();
-    if (z && z.isSupported()) {
-      const zr = $('zoom'); zr.min = z.min(); zr.max = z.max(); zr.step = z.step() || 0.1; zr.value = z.min();
-      zr.oninput = () => { try { z.apply(+zr.value); } catch (e) {} };
-      $('zoomRow').style.display = 'flex';
-    }
-  } catch (e) {}
-  try {
-    const t = caps.torchFeature();
-    if (t && t.isSupported()) {
-      const b = $('torchBtn'); b.style.display = '';
-      b.onclick = async () => { try { torchOn = !torchOn; await t.apply(torchOn); b.classList.toggle('on', torchOn); } catch (e) { torchOn = false; b.classList.remove('on'); } };
-    }
-  } catch (e) {}
+function handle(inv, seen) {
+  if (inv) {
+    const now = Date.now();
+    if (inv === lastHit && now - lastAt < 2500) hitCnt++; else { lastHit = inv; hitCnt = 1; }
+    lastAt = now; sMsg('Membaca ' + inv + '...');
+    if (hitCnt >= 2) gotInv(inv);
+  } else if (seen) {
+    sMsg('Terbaca "' + seen.slice(0, 30) + '" (bukan nomor INV). Arahkan ke barcode INV paling atas.', true);
+  }
 }
-async function startCam() {
-  const my = ++scanToken;
-  $('sRetry').style.display = 'none'; sMsg('Membuka kamera...');
+async function tick(id) {
+  if (id !== scanId) return;
+  let found = '', seen = '';
   try {
-    if (!window.isSecureContext || !navigator.mediaDevices) throw new Error('Kamera hanya bisa lewat https. Buka lewat Safari (iPhone) atau Chrome (Android), bukan dari dalam WhatsApp/Instagram.');
-    await loadLib();
-    await killCam();
-    const F = Html5QrcodeSupportedFormats;
-    const make = () => new Html5Qrcode('reader', { formatsToSupport: [F.CODE_128, F.QR_CODE], experimentalFeatures: { useBarCodeDetectorIfSupported: true }, verbose: false });
-    const onOk = text => {
-      if (my !== scanToken) return;
-      const inv = pickInv(text); if (!inv) return;              // abaikan barcode SKU / lainnya
-      const now = Date.now();
-      if (inv === lastHit && now - lastAt < 2000) hitCnt++; else { lastHit = inv; hitCnt = 1; }
-      lastAt = now; sMsg('Membaca ' + inv + '...');
-      if (hitCnt >= 2) gotInv(inv);
-    };
-    const cfg = { fps: 15, disableFlip: true, qrbox: w => ({ width: Math.floor(w * .92), height: Math.floor(w * .42) }) };
-    const tries = [
-      { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
-      { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
-      { facingMode: 'environment' },
-      null
-    ];
-    let ok = false, lastErr;
-    for (const vc of tries) {
-      if (my !== scanToken) return;
-      try {
-        qr = make();
-        await qr.start({ facingMode: 'environment' }, vc ? { ...cfg, videoConstraints: vc } : cfg, onOk, () => {});
-        ok = true; break;
-      } catch (e) {
-        lastErr = e; try { qr.clear(); } catch (x) {} qr = null;
-        const s = String((e && e.message) || e);
-        if (/NotAllowed|Permission|denied/i.test((e && e.name) + s)) break;   // izin ditolak: tidak perlu coba ulang
+    if (vid.readyState >= 2 && vid.videoWidth) {
+      tickN++;
+      if (det) {
+        try {
+          const r = await det.detect(vid);
+          for (const b of r) { const t = b.rawValue || ''; if (!seen) seen = t; const i = pickInv(t); if (i) { found = i; break; } }
+        } catch (e) { det = null; }
+      }
+      if (!found && window.ZXing && (!det || tickN % 3 === 0)) {
+        const c = cropRect(), k = tickN % 2 ? Math.min(1, 1280 / c.sw) : 1;   // selang-seling: resolusi penuh & diperkecil
+        cnv.width = Math.max(1, Math.round(c.sw * k)); cnv.height = Math.max(1, Math.round(c.sh * k));
+        cctx.drawImage(vid, c.sx, c.sy, c.sw, c.sh, 0, 0, cnv.width, cnv.height);
+        const t = zxDecode(cnv); if (t) { if (!seen) seen = t; const i = pickInv(t); if (i) found = i; }
       }
     }
-    if (!ok) throw lastErr || new Error('Kamera tidak bisa dibuka');
-    if (my !== scanToken) { killCam(); return; }
-    try { await qr.applyVideoConstraints({ advanced: [{ focusMode: 'continuous' }] }); } catch (e) {}
-    setupTools();
+  } catch (e) {}
+  if (id !== scanId) return;
+  handle(found, seen);
+  loopT = setTimeout(() => tick(id), det ? 90 : 130);
+}
+const adv = o => track ? track.applyConstraints({ advanced: [o] }).catch(() => {}) : Promise.resolve();
+
+async function startCam() {
+  const id = ++scanId;
+  killCam(); lastHit = ''; hitCnt = 0; torchOn = false; det = null;
+  $('sRetry').style.display = 'none'; $('zoomRow').style.display = 'none'; $('torchBtn').style.display = 'none'; sMsg('Membuka kamera...'); $('sInfo').textContent = '';
+  try {
+    if (!window.isSecureContext || !navigator.mediaDevices) throw new Error('Kamera hanya bisa lewat https. Buka lewat Safari (iPhone) atau Chrome (Android), bukan dari dalam WhatsApp/Instagram.');
+    if ('BarcodeDetector' in window) {
+      try {
+        const f = await BarcodeDetector.getSupportedFormats();
+        if (f.includes('code_128')) det = new BarcodeDetector({ formats: ['code_128', 'qr_code'].filter(x => f.includes(x)) });
+      } catch (e) { det = null; }
+    }
+    const zx = loadZX();
+    if (det) zx.catch(() => {}); else await zx;      // tanpa detektor bawaan, ZXing wajib
+    let lastErr, got = null;
+    const sizes = [[2560, 1440], [1920, 1080], [1280, 720], null];
+    for (const sz of sizes) {
+      try {
+        got = await navigator.mediaDevices.getUserMedia({ audio: false, video: sz ? { facingMode: { ideal: 'environment' }, width: { ideal: sz[0] }, height: { ideal: sz[1] } } : { facingMode: { ideal: 'environment' } } });
+        break;
+      } catch (e) { lastErr = e; if (/NotAllowed|Permission|Security/i.test(e && e.name)) break; }
+    }
+    if (!got) throw lastErr || new Error('Kamera tidak bisa dibuka');
+    if (id !== scanId) { got.getTracks().forEach(t => t.stop()); return; }
+    stream = got; track = stream.getVideoTracks()[0];
+    try { caps = track.getCapabilities ? track.getCapabilities() : {}; } catch (e) { caps = {}; }
+    vid.setAttribute('playsinline', ''); vid.muted = true; vid.srcObject = stream;
+    try { await vid.play(); } catch (e) {}
+    if (caps.focusMode && caps.focusMode.includes('continuous')) await adv({ focusMode: 'continuous' });
+    if (caps.zoom && caps.zoom.max > caps.zoom.min) {
+      const zr = $('zoom'); zr.min = caps.zoom.min; zr.max = caps.zoom.max; zr.step = caps.zoom.step || 0.1;
+      zr.value = Math.min(caps.zoom.max, Math.max(caps.zoom.min, 2));
+      adv({ zoom: +zr.value }); zr.oninput = () => adv({ zoom: +zr.value });
+      $('zoomRow').style.display = 'flex';
+    }
+    if (caps.torch) {
+      const b = $('torchBtn'); b.style.display = '';
+      b.onclick = async () => { torchOn = !torchOn; await adv({ torch: torchOn }); b.classList.toggle('on', torchOn); };
+    }
+    const st = track.getSettings ? track.getSettings() : {};
+    $('sInfo').textContent = 'v3 · ' + (st.width || vid.videoWidth) + '×' + (st.height || vid.videoHeight) + ' · ' + (det ? 'detektor bawaan + ZXing' : 'ZXing');
     sMsg('Arahkan ke barcode INV paling atas');
+    tick(id);
   } catch (err) {
-    if (my !== scanToken) return;
-    const raw = String((err && err.message) || err || '');
+    if (id !== scanId) return;
+    killCam();
+    const nm = String((err && err.name) || ''), raw = String((err && err.message) || err || '');
     let m = raw;
-    if (/NotAllowed|Permission|denied/i.test((err && err.name) + raw)) m = 'Izin kamera ditolak. iPhone: Pengaturan > Safari > Kamera > Izinkan. Android: ketuk ikon gembok di address bar > Izin > Kamera.';
-    else if (/NotFound|Devices not found|Requested device/i.test((err && err.name) + raw)) m = 'Kamera tidak ditemukan di perangkat ini.';
-    else if (/NotReadable|TrackStart|in use/i.test((err && err.name) + raw)) m = 'Kamera sedang dipakai aplikasi lain. Tutup aplikasi itu lalu coba lagi.';
+    if (/NotAllowed|Permission|denied/i.test(nm + raw)) m = 'Izin kamera ditolak. iPhone: Pengaturan > Safari > Kamera > Izinkan. Android: ketuk ikon gembok di address bar > Izin > Kamera.';
+    else if (/NotFound|Devices not found/i.test(nm + raw)) m = 'Kamera tidak ditemukan di perangkat ini.';
+    else if (/NotReadable|TrackStart|in use/i.test(nm + raw)) m = 'Kamera sedang dipakai aplikasi lain. Tutup aplikasi itu lalu coba lagi.';
     sMsg(m || 'Kamera tidak bisa dibuka.', true);
     $('sRetry').style.display = '';
   }
 }
+$('vwrap').addEventListener('click', async () => {      // ketuk untuk fokus ulang
+  if (caps.focusMode && caps.focusMode.includes('single-shot')) {
+    await adv({ focusMode: 'single-shot' });
+    setTimeout(() => { if (caps.focusMode.includes('continuous')) adv({ focusMode: 'continuous' }); }, 1500);
+  }
+});
 $('btnScan').onclick = () => { $('scan').classList.add('open'); startCam(); };
 $('sRetry').onclick = startCam;
 $('closeScan').onclick = stopScan;
