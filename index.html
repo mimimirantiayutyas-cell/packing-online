@@ -625,7 +625,8 @@ function gotInv(inv) {
   $('invoice').value = inv; beep(); if (navigator.vibrate) navigator.vibrate(120);
   stopScan(); toast('✅ Barcode terbaca: ' + inv, true);
 }
-function handle(inv, seen) {
+function handle(inv, seen, fast) {
+  if (inv && fast) { gotInv(inv); return; }   // detektor bawaan sudah punya checksum, langsung terima
   if (inv) {
     const now = Date.now();
     if (inv === lastHit && now - lastAt < 2500) hitCnt++; else { lastHit = inv; hitCnt = 1; }
@@ -635,16 +636,16 @@ function handle(inv, seen) {
     sMsg('Terbaca "' + seen.slice(0, 30) + '" (bukan nomor INV). Arahkan ke barcode INV paling atas.', true);
   }
 }
-async function tick(id) {
+async function scanTick(id) {
   if (id !== scanId) return;
-  let found = '', seen = '';
+  let found = '', seen = '', fast = false;
   try {
     if (vid.readyState >= 2 && vid.videoWidth) {
       tickN++;
       if (det) {
         try {
           const r = await det.detect(vid);
-          for (const b of r) { const t = b.rawValue || ''; if (!seen) seen = '[' + b.format + '] ' + t; const i = pickInv(t); if (i) { found = i; break; } }
+          for (const b of r) { const t = b.rawValue || ''; if (!seen) seen = '[' + b.format + '] ' + t; const i = pickInv(t); if (i) { found = i; fast = true; break; } }
         } catch (e) { det = null; }
       }
       if (!found && window.ZXing && (!det || tickN % 2 === 0)) {
@@ -656,7 +657,7 @@ async function tick(id) {
     }
   } catch (e) {}
   if (id !== scanId) return;
-  handle(found, seen);
+  handle(found, seen, fast);
   if (!found && !seen && tickN % 4 === 0 && vid.videoWidth) {
     try {
       const sh = sharpness(); shMax = Math.max(shMax * .997, sh);
@@ -664,7 +665,7 @@ async function tick(id) {
       else sMsg('Gambar tajam. Tahan HP, pastikan barcode INV di dalam kotak.');
     } catch (e) {}
   }
-  loopT = setTimeout(() => tick(id), det ? 90 : 130);
+  loopT = setTimeout(() => scanTick(id), det ? 30 : 70);
 }
 const adv = o => track ? track.applyConstraints({ advanced: [o] }).catch(() => {}) : Promise.resolve();
 
@@ -708,9 +709,9 @@ async function startCam() {
       b.onclick = async () => { torchOn = !torchOn; await adv({ torch: torchOn }); b.classList.toggle('on', torchOn); };
     }
     const st = track.getSettings ? track.getSettings() : {};
-    $('sInfo').textContent = 'v5 · ' + (st.width || vid.videoWidth) + '×' + (st.height || vid.videoHeight) + ' · ' + (det ? 'detektor bawaan + ZXing' : 'ZXing') + (fmtInfo ? '\nformat: ' + fmtInfo : '');
+    $('sInfo').textContent = 'v6 · ' + (st.width || vid.videoWidth) + '×' + (st.height || vid.videoHeight) + ' · ' + (det ? 'detektor bawaan + ZXing' : 'ZXing') + (fmtInfo ? '\nformat: ' + fmtInfo : '');
     sMsg('Arahkan ke barcode INV paling atas');
-    tick(id);
+    scanTick(id);
   } catch (err) {
     if (id !== scanId) return;
     killCam();
