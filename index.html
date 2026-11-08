@@ -7,6 +7,7 @@
 <title>Packing Online AZ·KO</title>
 <link rel="preconnect" href="https://script.google.com">
 <link rel="preconnect" href="https://drive.google.com">
+<link rel="preconnect" href="https://lh3.googleusercontent.com">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800;900&display=swap" rel="stylesheet">
@@ -835,7 +836,7 @@ $('f').addEventListener('submit', e => {
 const PER = 20;
 let CUR = [], page = 1, pages = 1, reqCtl = null, wantKey = '';
 const fileId = u => { const m = String(u).match(/\/d\/([^/?]+)/) || String(u).match(/[?&]id=([^&]+)/); return m ? m[1] : ''; };
-const thumb = (u, w) => 'https://drive.google.com/thumbnail?id=' + fileId(u) + '&sz=w' + w;
+const thumb = (u, w) => 'https://lh3.googleusercontent.com/d/' + fileId(u) + '=w' + w;
 const dlUrl = u => 'https://drive.google.com/uc?export=download&id=' + fileId(u);
 const tglID = iso => { const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? m[3] + '/' + m[2] + '/' + m[1] : iso; };
 const cleanPic = s => String(s || '').replace(/^\s*PACKING\s*ONLINE\s*:?\s*/i, '').trim().toUpperCase();
