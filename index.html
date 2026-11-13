@@ -44,6 +44,8 @@ body.in #app{display:block}
 body.in #vLogin{display:none}
 .lt{margin:0 0 4px;font-size:20px;font-weight:800}
 .lerr{min-height:18px;margin:10px 2px 0;font-size:13px;font-weight:700;color:var(--red)}
+.ptag{margin-top:12px;display:inline-block;font-size:12px;font-weight:800;letter-spacing:.6px;padding:6px 12px;border-radius:999px;background:#e8fbf3;color:#0a8a60}
+.ptag.b3{background:#e6f3ff;color:#1b64a8}
 .ubar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 4px 12px;font-size:13px;font-weight:700}
 .ubar span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .save.b3{background:linear-gradient(180deg,#5cc0ff,#2a8fe6 60%,#1b75c9);box-shadow:0 7px 0 #1b64a8,0 18px 28px rgba(42,169,255,.3);color:#04223d}
@@ -225,10 +227,17 @@ body.m3pl td.ak,body.m3pl thead th:last-child{display:none}
     <div class="titlebox"><h1>Packing Online</h1><div class="sub">AZ·KO SIDOARJO</div></div>
   </div>
 
-  <!-- ===== LOGIN (1 layar: NIP, Nama, Password, 2 tombol portal) ===== -->
+  <!-- ===== LOGIN (pilih portal dulu, lalu isi NIP/Nama/Password) ===== -->
   <div id="vLogin"><div class="card">
     <h2 class="lt">Masuk</h2>
-    <form id="lf" autocomplete="on">
+
+    <div id="lPick">
+      <button class="save" id="pPack" type="button" style="margin-top:18px"><span>MASUK PACKING</span></button>
+      <button class="save b3" id="pPl" type="button" style="margin-top:14px"><span>MASUK SERTIM 3PL</span></button>
+    </div>
+
+    <form id="lf" autocomplete="on" style="display:none">
+      <div class="ptag" id="lTag"></div>
       <label for="lNip" style="margin-top:14px">NIP</label>
       <input id="lNip" name="username" inputmode="numeric" enterkeyhint="next" autocomplete="username" required>
 
@@ -241,10 +250,11 @@ body.m3pl td.ak,body.m3pl thead th:last-child{display:none}
         <button type="button" class="ib blue" id="lEye" aria-label="Tampilkan password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
       </div>
 
-      <div class="lerr" id="lErr" role="alert"></div>
-      <button class="save" id="lBtn" type="submit" style="margin-top:14px"><span class="spin"></span><span>MASUK PACKING</span></button>
-      <button class="save b3" id="lBtn3" type="submit" style="margin-top:14px"><span class="spin"></span><span>MASUK SERTIM 3PL</span></button>
+      <button class="save" id="lBtn" type="submit" style="margin-top:20px"><span class="spin"></span><span id="lBtnTxt">MASUK</span></button>
+      <button type="button" class="ebtn" id="lBack" style="width:100%;margin-top:14px;padding:12px">← Kembali</button>
     </form>
+
+    <div class="lerr" id="lErr" role="alert"></div>
   </div></div>
 
   <!-- ===== APLIKASI ===== -->
@@ -449,7 +459,7 @@ async function api(body) {
   return j;
 }
 
-/* ---------- Login 1 layar: NIP, nama otomatis, password, pilih portal ---------- */
+/* ---------- Login: pilih portal dulu, lalu NIP, nama otomatis, password ---------- */
 async function postRaw(body) {
   const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
   const j = await r.json();
@@ -458,6 +468,26 @@ async function postRaw(body) {
 }
 function resetLogin() { $('lNama').value = ''; $('lPass').value = ''; $('lPass').type = 'password'; }
 $('lEye').onclick = () => { const p = $('lPass'); p.type = p.type === 'password' ? 'text' : 'password'; };
+
+// pilih portal -> tampilkan form login untuk portal tsb
+let LMODE = 'pack';
+function openPortal(m) {
+  LMODE = m;
+  $('lPick').style.display = 'none'; $('lf').style.display = '';
+  $('lBtn').classList.toggle('b3', m === '3pl');
+  $('lBtnTxt').textContent = m === '3pl' ? 'MASUK SERTIM 3PL' : 'MASUK PACKING';
+  $('lTag').textContent = m === '3pl' ? 'PORTAL SERTIM 3PL' : 'PORTAL PACKING';
+  $('lTag').classList.toggle('b3', m === '3pl');
+  $('lErr').textContent = '';
+  $('lNip').focus();
+}
+function closePortal() {
+  $('lf').style.display = 'none'; $('lPick').style.display = '';
+  resetLogin(); $('lNip').value = ''; $('lErr').textContent = '';
+}
+$('pPack').onclick = () => openPortal('pack');
+$('pPl').onclick = () => openPortal('3pl');
+$('lBack').onclick = closePortal;
 
 // nama terisi otomatis setelah NIP diketik
 let lookT;
@@ -472,22 +502,21 @@ $('lNip').addEventListener('input', () => {
 
 $('lf').addEventListener('submit', async e => {
   e.preventDefault();
-  const nip = $('lNip').value.trim(), pass = $('lPass').value;
-  const b = $('lBtn'), b3 = $('lBtn3');
+  const nip = $('lNip').value.trim(), pass = $('lPass').value, mode = LMODE;
+  const b = $('lBtn');
   if (!nip) { $('lErr').textContent = 'NIP wajib diisi'; $('lNip').focus(); return; }
   if (!pass) { $('lErr').textContent = 'Password wajib diisi'; $('lPass').focus(); return; }
-  const mode = (e.submitter && e.submitter.id === 'lBtn3') ? '3pl' : 'pack';
-  $('lErr').textContent = ''; b.disabled = b3.disabled = true;
+  $('lErr').textContent = ''; b.disabled = true;
   try {
     const j = await postRaw({ action: 'login', nip, password: pass, mode });
     S = { token: j.token, nip: j.nip, nama: j.nama, role: j.role, exp: j.exp, mode: j.mode || mode };
-    lsSet('sess', S); resetLogin(); $('lNip').value = '';
+    lsSet('sess', S); closePortal();
     enterApp();
   } catch (err) {
     $('lErr').textContent = err instanceof SyntaxError || err.name === 'TypeError' ? 'Tidak bisa terhubung ke server. Cek internet.' : err.message;
     $('lPass').value = ''; $('lPass').focus();
   } finally {
-    b.disabled = b3.disabled = false;
+    b.disabled = false;
   }
 });
 
@@ -510,7 +539,7 @@ function logout(msg) {
   Q.length = 0; CACHE.clear(); CUR = []; monLoaded = false; picsLoaded = false; wantKey = '';
   if (reqCtl) reqCtl.abort();
   stopScan();
-  resetLogin(); $('lNip').value = '';
+  closePortal();
   document.body.classList.remove('in', 'm3pl'); $('wrap').classList.remove('wide');
   $('lErr').textContent = typeof msg === 'string' ? msg : '';
   history.replaceState(null, '', location.pathname);
