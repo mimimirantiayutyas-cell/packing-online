@@ -225,26 +225,25 @@ body.m3pl td.ak,body.m3pl thead th:last-child{display:none}
     <div class="titlebox"><h1>Packing Online</h1><div class="sub">AZ·KO SIDOARJO</div></div>
   </div>
 
-  <!-- ===== LOGIN ===== -->
+  <!-- ===== LOGIN (1 layar: NIP, Nama, Password, 2 tombol portal) ===== -->
   <div id="vLogin"><div class="card">
     <h2 class="lt">Masuk</h2>
     <form id="lf" autocomplete="on">
       <label for="lNip" style="margin-top:14px">NIP</label>
-      <input id="lNip" name="username" inputmode="numeric" enterkeyhint="go" autocomplete="username" required>
+      <input id="lNip" name="username" inputmode="numeric" enterkeyhint="next" autocomplete="username" required>
 
-      <div id="lStep2" style="display:none">
-        <label for="lNama">Nama</label>
-        <input id="lNama" readonly tabindex="-1">
-        <label for="lPass">Password</label>
-        <div class="field">
-          <input id="lPass" name="password" type="password" enterkeyhint="go" autocomplete="current-password">
-          <button type="button" class="ib blue" id="lEye" aria-label="Tampilkan password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
-        </div>
+      <label for="lNama">Nama</label>
+      <input id="lNama" readonly tabindex="-1">
+
+      <label for="lPass">Password</label>
+      <div class="field">
+        <input id="lPass" name="password" type="password" enterkeyhint="go" autocomplete="current-password">
+        <button type="button" class="ib blue" id="lEye" aria-label="Tampilkan password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
       </div>
 
       <div class="lerr" id="lErr" role="alert"></div>
-      <button class="save" id="lBtn" type="submit" style="margin-top:14px"><span class="spin"></span><span id="lTxt">LANJUT</span></button>
-      <button class="save b3" id="lBtn3" type="submit" style="display:none;margin-top:14px"><span class="spin"></span><span>MASUK SERTIM 3PL</span></button>
+      <button class="save" id="lBtn" type="submit" style="margin-top:14px"><span class="spin"></span><span>MASUK PACKING</span></button>
+      <button class="save b3" id="lBtn3" type="submit" style="margin-top:14px"><span class="spin"></span><span>MASUK SERTIM 3PL</span></button>
     </form>
   </div></div>
 
@@ -450,56 +449,45 @@ async function api(body) {
   return j;
 }
 
-/* ---------- Login 2 langkah: NIP dulu, lalu tombol portal sesuai akses NIP ----------
-   akses 'packing' -> hanya tombol MASUK PACKING
-   akses '3pl'     -> hanya tombol MASUK SERTIM 3PL
-   akses 'semua'   -> admin, kedua tombol tampil */
-let stepNip = '', stepAkses = '';
+/* ---------- Login 1 layar: NIP, nama otomatis, password, pilih portal ---------- */
 async function postRaw(body) {
   const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
   const j = await r.json();
   if (j.status !== 'success') throw new Error(j.message || 'Gagal');
   return j;
 }
-function resetLogin() {
-  stepNip = ''; stepAkses = '';
-  $('lStep2').style.display = 'none'; $('lBtn3').style.display = 'none'; $('lBtn').style.display = '';
-  $('lNama').value = ''; $('lPass').value = ''; $('lPass').type = 'password';
-  $('lTxt').textContent = 'LANJUT';
-}
+function resetLogin() { $('lNama').value = ''; $('lPass').value = ''; $('lPass').type = 'password'; }
 $('lEye').onclick = () => { const p = $('lPass'); p.type = p.type === 'password' ? 'text' : 'password'; };
-$('lNip').addEventListener('input', () => { if (stepNip) resetLogin(); $('lErr').textContent = ''; });
+
+// nama terisi otomatis setelah NIP diketik
+let lookT;
+$('lNip').addEventListener('input', () => {
+  $('lErr').textContent = ''; $('lNama').value = ''; clearTimeout(lookT);
+  const nip = $('lNip').value.trim();
+  if (!nip) return;
+  lookT = setTimeout(async () => {
+    try { const j = await postRaw({ action: 'lookup', nip }); if ($('lNip').value.trim() === nip) $('lNama').value = j.nama; } catch (e) {}
+  }, 500);
+});
 
 $('lf').addEventListener('submit', async e => {
   e.preventDefault();
-  const nip = $('lNip').value.trim();
-  if (!nip) return;
-  const b = $('lBtn'), b3 = $('lBtn3'); $('lErr').textContent = ''; b.disabled = b3.disabled = true;
+  const nip = $('lNip').value.trim(), pass = $('lPass').value;
+  const b = $('lBtn'), b3 = $('lBtn3');
+  if (!nip) { $('lErr').textContent = 'NIP wajib diisi'; $('lNip').focus(); return; }
+  if (!pass) { $('lErr').textContent = 'Password wajib diisi'; $('lPass').focus(); return; }
+  const mode = (e.submitter && e.submitter.id === 'lBtn3') ? '3pl' : 'pack';
+  $('lErr').textContent = ''; b.disabled = b3.disabled = true;
   try {
-    if (!stepNip) {
-      $('lTxt').textContent = 'MENCARI...';
-      const j = await postRaw({ action: 'lookup', nip });
-      stepNip = nip; stepAkses = j.akses || 'packing'; $('lNama').value = j.nama;
-      $('lStep2').style.display = '';
-      b.style.display  = stepAkses === '3pl' ? 'none' : '';        // tombol Packing: untuk akses packing & admin
-      b3.style.display = stepAkses === 'packing' ? 'none' : '';    // tombol Sertim 3PL: untuk akses 3pl & admin
-      $('lPass').focus();
-    } else {
-      const pass = $('lPass').value;
-      if (!pass) { $('lErr').textContent = 'Password wajib diisi'; $('lPass').focus(); return; }
-      // portal yang dipilih: tombol 3PL, atau (tekan Enter) satu-satunya portal yang boleh
-      const mode = ((e.submitter && e.submitter.id === 'lBtn3') || stepAkses === '3pl') ? '3pl' : 'pack';
-      $('lTxt').textContent = 'MEMERIKSA...';
-      const j = await postRaw({ action: 'login', nip: stepNip, password: pass, mode });
-      S = { token: j.token, nip: j.nip, nama: j.nama, role: j.role, exp: j.exp, mode: j.mode || mode };
-      lsSet('sess', S); resetLogin(); $('lNip').value = '';
-      enterApp();
-    }
+    const j = await postRaw({ action: 'login', nip, password: pass, mode });
+    S = { token: j.token, nip: j.nip, nama: j.nama, role: j.role, exp: j.exp, mode: j.mode || mode };
+    lsSet('sess', S); resetLogin(); $('lNip').value = '';
+    enterApp();
   } catch (err) {
     $('lErr').textContent = err instanceof SyntaxError || err.name === 'TypeError' ? 'Tidak bisa terhubung ke server. Cek internet.' : err.message;
-    if (stepNip) { $('lPass').value = ''; $('lPass').focus(); }
+    $('lPass').value = ''; $('lPass').focus();
   } finally {
-    b.disabled = b3.disabled = false; $('lTxt').textContent = stepNip ? 'MASUK PACKING' : 'LANJUT';
+    b.disabled = b3.disabled = false;
   }
 });
 
