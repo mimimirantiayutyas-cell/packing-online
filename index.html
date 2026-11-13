@@ -364,15 +364,18 @@ body.m3pl td.ak,body.m3pl thead th:last-child{display:none}
       <form id="uf" autocomplete="off">
         <div class="row">
           <div><label for="uNip">NIP</label><input id="uNip" required placeholder="NIP"></div>
-          <div><label for="uRole">Peran</label><select id="uRole"><option value="staff">Petugas</option><option value="admin">Admin</option></select></div>
-        </div>
-        <div id="uAksesBox">
-          <label for="uAkses">Akses portal</label>
-          <select id="uAkses"><option value="packing">Packing</option><option value="3pl">Sertim 3PL</option></select>
+          <div><label for="uRole">Peran</label>
+            <select id="uRole">
+              <option value="staff">Petugas</option>
+              <option value="admin">Admin</option>
+              <option value="3pl">Sertim 3PL</option>
+              <option value="both">Petugas + Sertim 3PL</option>
+            </select>
+          </div>
         </div>
         <label for="uNama">Nama</label><input id="uNama" required autocapitalize="characters" placeholder="Nama lengkap">
         <label for="uPass">Password awal</label><input id="uPass" required minlength="6" placeholder="Minimal 6 karakter">
-        <div class="hint" id="uHint" style="color:var(--mut)">Admin otomatis bisa masuk ke Packing dan Sertim 3PL.</div>
+        <div class="hint" id="uHint" style="color:var(--mut)"></div>
         <button class="save" id="uBtn" type="submit" style="margin-top:18px;font-size:15px;padding:14px"><span class="spin"></span><span id="uTxt">TAMBAH PENGGUNA</span></button>
       </form>
       <h3 style="margin-top:26px">Daftar pengguna</h3>
@@ -432,11 +435,14 @@ body.m3pl td.ak,body.m3pl thead th:last-child{display:none}
   <h4>Edit Pengguna</h4><div class="meta" id="ueMeta"></div>
   <label for="ueNip">NIP</label><input id="ueNip" autocomplete="off">
   <label for="ueNama">Nama</label><input id="ueNama" autocapitalize="characters" autocomplete="off">
-  <label for="ueRole">Peran</label><select id="ueRole"><option value="staff">Petugas</option><option value="admin">Admin</option></select>
-  <div id="ueAksesBox">
-    <label for="ueAkses">Akses portal</label>
-    <select id="ueAkses"><option value="packing">Packing</option><option value="3pl">Sertim 3PL</option></select>
-  </div>
+  <label for="ueRole">Peran</label>
+  <select id="ueRole">
+    <option value="staff">Petugas</option>
+    <option value="admin">Admin</option>
+    <option value="3pl">Sertim 3PL</option>
+    <option value="both">Petugas + Sertim 3PL</option>
+  </select>
+  <div class="hint" id="ueHint" style="color:var(--mut)"></div>
   <div class="edact"><button type="button" id="ueCancel">Batal</button><button type="button" class="ok" id="ueSave">Simpan</button></div>
 </div></div>
 <div id="toast"></div>
@@ -448,6 +454,8 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbz_dwOslJTKQbqs8D_Rtvxp
 const $ = id => document.getElementById(id);
 const fotos = [null, null, null, null];
 const CACHE = new Map();
+let GEN = 0;                                              // naik tiap cache dibersihkan (agar prefetch lama tidak masuk lagi)
+const clearCache = () => { CACHE.clear(); GEN++; };
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const lsGet = k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } };
@@ -502,15 +510,24 @@ $('pPack').onclick = () => openPortal('pack');
 $('pPl').onclick = () => openPortal('3pl');
 $('lBack').onclick = closePortal;
 
-// nama terisi otomatis setelah NIP diketik
+// pesan bila NIP tidak punya akses ke portal yang dipilih
+const aksesMsg = ak => (LMODE === '3pl' && ak === 'packing') ? 'NIP ini tidak punya akses Sertim 3PL'
+                     : (LMODE === 'pack' && ak === '3pl') ? 'NIP ini tidak punya akses Packing' : '';
+
+// nama terisi otomatis setelah NIP diketik (sekaligus cek akses portal)
 let lookT;
 $('lNip').addEventListener('input', () => {
   $('lErr').textContent = ''; $('lNama').value = ''; clearTimeout(lookT);
   const nip = $('lNip').value.trim();
   if (!nip) return;
   lookT = setTimeout(async () => {
-    try { const j = await postRaw({ action: 'lookup', nip }); if ($('lNip').value.trim() === nip) $('lNama').value = j.nama; } catch (e) {}
-  }, 500);
+    try {
+      const j = await postRaw({ action: 'lookup', nip });
+      if ($('lNip').value.trim() !== nip) return;
+      $('lNama').value = j.nama;
+      $('lErr').textContent = aksesMsg(j.akses);
+    } catch (e) {}
+  }, 400);
 });
 
 $('lf').addEventListener('submit', async e => {
@@ -549,7 +566,7 @@ function enterApp() {
 }
 function logout(msg) {
   S = null; lsDel('sess'); lsDel('mon0');
-  Q.length = 0; CACHE.clear(); CUR = []; monLoaded = false; picsLoaded = false; wantKey = '';
+  Q.length = 0; clearCache(); CUR = []; monLoaded = false; picsLoaded = false; wantKey = '';
   if (reqCtl) reqCtl.abort();
   stopScan();
   closePortal();
@@ -888,7 +905,7 @@ $('sheet').addEventListener('click', e => { if (e.target.id === 'sheet') $('shee
 /* ---------- Kirim (antrean latar belakang) ---------- */
 const Q = []; let sending = false;
 function chip() { $('qchip').textContent = Q.length ? '⏳ Mengirim ' + Q.length + ' data di latar belakang...' : ''; }
-function sentOk(inv) { CACHE.clear(); monLoaded = false; picsLoaded = false; toast('✅ Tersimpan: ' + inv, true); }
+function sentOk(inv) { clearCache(); monLoaded = false; picsLoaded = false; toast('✅ Tersimpan: ' + inv, true); }
 async function pump() {
   if (sending) return;
   sending = true;
@@ -946,6 +963,7 @@ const filters = () => {
   if (a && b && a > b) { $('tgl1').value = b; $('tgl2').value = a; [a, b] = [b, a]; }   // dari > sampai: tukar otomatis
   return { from: a, to: b, pic: $('pic').value.trim().toUpperCase(), kurir: $('kurir').value, q: $('q').value.trim().toUpperCase() };
 };
+const keyFor = pg => new URLSearchParams({ action: 'list', page: pg, per: PER, ...filters(), ...(is3() ? { kpi: 1 } : {}) }).toString();
 
 async function loadPics() {
   if (!S) return;
@@ -972,7 +990,7 @@ function renderKpi(k) {
     $('kInv14').textContent = f(k.totInvoice); $('kKoli14').textContent = f(k.totKoli);
   } else {
     const lbl = rg.from && rg.to ? (rg.from === rg.to ? tglID(rg.from) : tglID(rg.from) + ' s/d ' + tglID(rg.to)) : rg.from ? 'sejak ' + tglID(rg.from) : 'sampai ' + tglID(rg.to);
-    $('kTitle').textContent = 'KPI Sertim 3PL · ' + lbl + (k.filtered ? ' · sesuai filter' : '');
+    $('kTitle').textContent = 'KPI Sertim 3PL · ' + lbl;
     $('kL1').textContent = 'Total invoice'; $('kL2').textContent = 'Total koli';
     $('kL3').textContent = 'Rata-rata invoice/hari'; $('kL4').textContent = 'Hari ada data';
     $('kInv').textContent = f(k.totInvoice); $('kKoli').textContent = f(k.totKoli);
@@ -985,14 +1003,30 @@ function renderKpi(k) {
       : '<div class="msg">Tidak ada data pada periode ini.</div>');
 }
 
+// ambil halaman berikutnya diam-diam supaya klik "Berikutnya" langsung tampil
+let preT = 0;
+function prefetchNext() {
+  clearTimeout(preT);
+  if (!S || page >= pages) return;
+  const key = keyFor(page + 1), g = GEN, tk = S.token;
+  if (CACHE.has(key)) return;
+  preT = setTimeout(async () => {
+    try {
+      const r = await fetch(API_URL + '?' + key + '&token=' + encodeURIComponent(tk));
+      const j = await r.json();
+      if (j.status === 'success' && g === GEN && S) { CACHE.set(key, j); if (CACHE.size > 40) CACHE.delete(CACHE.keys().next().value); }
+    } catch (e) {}
+  }, 400);
+}
+
 async function loadMon(force) {
   if (!S) return;
-  const key = new URLSearchParams({ action: 'list', page, per: PER, ...filters(), ...(is3() ? { kpi: 1 } : {}) }).toString();
+  const key = keyFor(page);
   if (!force && CACHE.has(key)) { wantKey = key; applyData(CACHE.get(key)); return; }
   if (!force && key === wantKey && reqCtl) return;
   if (reqCtl) reqCtl.abort();
   wantKey = key; reqCtl = new AbortController(); $('ldbar').classList.add('on');
-  const ctl = reqCtl, wrap = $('tbwrap');
+  const ctl = reqCtl, wrap = $('tbwrap'), g = GEN;
   if (!CUR.length) {
     const stale = key === defKey() ? lsGet('mon0') : null;
     if (stale) applyData(stale); else $('list').innerHTML = emptyRow('Memuat data...');
@@ -1003,7 +1037,7 @@ async function loadMon(force) {
     const j = await r.json();
     if (j.code === 'auth') return logout(j.message);
     if (j.status !== 'success') throw new Error(j.message || 'Respon API tidak valid');
-    CACHE.set(key, j); if (CACHE.size > 40) CACHE.delete(CACHE.keys().next().value);
+    if (g === GEN) { CACHE.set(key, j); if (CACHE.size > 40) CACHE.delete(CACHE.keys().next().value); }
     if (key === defKey()) lsSet('mon0', j);
     monLoaded = true;
     if (key === wantKey) applyData(j);
@@ -1026,6 +1060,7 @@ function applyData(j) {
   $('pager').innerHTML = j.total
     ? '<span>Baris ' + (from + 1) + ' sampai ' + Math.min(from + PER, j.total) + ' dari ' + j.total.toLocaleString('id-ID') + '</span><span><button type="button" data-p="-1"' + (page <= 1 ? ' disabled' : '') + '>Sebelumnya</button> &nbsp;Halaman <b>' + page + '</b> dari ' + pages + '&nbsp; <button type="button" data-p="1"' + (page >= pages ? ' disabled' : '') + '>Berikutnya</button></span>'
     : '';
+  prefetchNext();
 }
 
 function renderTable() {
@@ -1045,11 +1080,12 @@ function renderTable() {
 const deb = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
 const refilter = () => { page = 1; loadMon(); };
 ['tgl1', 'tgl2', 'kurir'].forEach(id => $(id).addEventListener('change', refilter));
-$('pic').addEventListener('input', deb(refilter, 450));
+$('pic').addEventListener('input', deb(refilter, 280));
+$('pic').addEventListener('change', refilter);
 $('pic').addEventListener('focus', e => e.target.select());
-$('q').addEventListener('input', deb(refilter, 450));
+$('q').addEventListener('input', deb(refilter, 280));
 $('reset').onclick = () => { $('tgl1').value = ''; $('tgl2').value = ''; $('pic').value = ''; $('kurir').value = ''; $('q').value = ''; refilter(); };
-$('reload').onclick = () => { CACHE.clear(); picsLoaded = false; loadPics(); loadMon(true); };
+$('reload').onclick = () => { clearCache(); picsLoaded = false; loadPics(); loadMon(true); };
 $('pager').addEventListener('click', e => { const b = e.target.closest('button[data-p]'); if (!b) return; page += +b.dataset.p; loadMon(); $('tbwrap').scrollTop = 0; });
 
 /* ---------- Galeri foto ---------- */
@@ -1118,7 +1154,7 @@ $('eSave').onclick = async () => {
   try {
     const r = await api({ action: 'update', id: d.id, row: d.row, invoice, pengiriman, koli });
     d.invoice = r.invoice; d.pengiriman = pengiriman; d.koli = koli; d.row = r.row;
-    CACHE.clear(); lsDel('mon0');
+    clearCache(); lsDel('mon0');
     $('ed').classList.remove('open');
     renderTable();
     toast('✅ Data berhasil diubah', true);
@@ -1127,12 +1163,20 @@ $('eSave').onclick = async () => {
 };
 
 /* ---------- Pengguna (khusus admin) ---------- */
-const AKSES_LBL = { packing: 'Packing', '3pl': 'Sertim 3PL', semua: 'Packing + Sertim 3PL' };
+// peran: staff = Petugas (Packing) | admin = Admin (Packing + Sertim 3PL) | 3pl = Sertim 3PL saja | both = Petugas + Sertim 3PL
+const PERAN_LBL = { staff: 'Petugas · Akses: Packing', admin: 'Admin · Akses: Packing + Sertim 3PL', '3pl': 'Sertim 3PL · Akses: Sertim 3PL', both: 'Petugas + Sertim 3PL · Akses: Packing + Sertim 3PL' };
+const PERAN_HINT = {
+  staff: 'Petugas hanya bisa masuk ke portal Packing.',
+  admin: 'Admin otomatis bisa masuk ke Packing dan Sertim 3PL.',
+  '3pl': 'Sertim 3PL hanya bisa masuk ke portal Sertim 3PL, tidak bisa masuk Packing.',
+  both: 'Terdaftar di kedua sistem: bisa masuk ke Packing dan Sertim 3PL.'
+};
+const peranOf = u => u.role === 'admin' ? 'admin' : u.akses === '3pl' ? '3pl' : u.akses === 'semua' ? 'both' : 'staff';
 let UL = [], UE = '';
 function renderUsers(list) {
   UL = list;
   $('uList').innerHTML = list.length ? list.map(u =>
-    '<div class="urow' + (u.aktif ? '' : ' off') + '"><div class="ui"><b>' + esc(u.nama) + '</b><div class="meta">NIP ' + esc(u.nip) + ' · ' + (u.role === 'admin' ? 'Admin' : 'Petugas') + ' · Akses: ' + esc(AKSES_LBL[u.akses] || 'Packing') + (u.aktif ? '' : ' · Nonaktif') + '</div></div>' +
+    '<div class="urow' + (u.aktif ? '' : ' off') + '"><div class="ui"><b>' + esc(u.nama) + '</b><div class="meta">NIP ' + esc(u.nip) + ' · ' + esc(PERAN_LBL[peranOf(u)]) + (u.aktif ? '' : ' · Nonaktif') + '</div></div>' +
     '<div class="uact"><button type="button" class="ebtn" data-a="edit" data-n="' + esc(u.nip) + '">✏️ Edit</button>' +
     '<button type="button" class="ebtn" data-a="pw" data-n="' + esc(u.nip) + '">Reset password</button>' +
     '<button type="button" class="ebtn" data-a="tog" data-n="' + esc(u.nip) + '" data-v="' + (u.aktif ? 0 : 1) + '">' + (u.aktif ? 'Nonaktifkan' : 'Aktifkan') + '</button>' +
@@ -1143,20 +1187,19 @@ async function loadUsers() {
   try { renderUsers((await api({ action: 'users' })).users); }
   catch (e) { $('uList').innerHTML = '<div class="msg err">Gagal memuat: ' + esc(e.message) + '</div>'; }
 }
-// kolom "Akses portal" disembunyikan bila peran = Admin (admin otomatis bisa keduanya)
-const syncAkses = () => {
-  $('uAksesBox').style.display = $('uRole').value === 'admin' ? 'none' : '';
-  $('ueAksesBox').style.display = $('ueRole').value === 'admin' ? 'none' : '';
+const syncHint = () => {
+  $('uHint').textContent = PERAN_HINT[$('uRole').value] || '';
+  $('ueHint').textContent = PERAN_HINT[$('ueRole').value] || '';
 };
-$('uRole').addEventListener('change', syncAkses);
-$('ueRole').addEventListener('change', syncAkses);
+$('uRole').addEventListener('change', syncHint);
+$('ueRole').addEventListener('change', syncHint);
 $('uNama').addEventListener('input', e => e.target.value = e.target.value.toUpperCase());
 $('uf').addEventListener('submit', async e => {
   e.preventDefault();
   const b = $('uBtn'); b.disabled = true; $('uTxt').textContent = 'MENYIMPAN...';
   try {
-    const j = await api({ action: 'user_add', nip: $('uNip').value.trim(), nama: $('uNama').value.trim(), password: $('uPass').value, role: $('uRole').value, akses: $('uAkses').value });
-    renderUsers(j.users); $('uf').reset(); syncAkses(); toast('✅ Pengguna ditambahkan', true);
+    const j = await api({ action: 'user_add', nip: $('uNip').value.trim(), nama: $('uNama').value.trim(), password: $('uPass').value, role: $('uRole').value });
+    renderUsers(j.users); $('uf').reset(); syncHint(); toast('✅ Pengguna ditambahkan', true);
   } catch (err) { toast('❌ ' + err.message, false); }
   finally { b.disabled = false; $('uTxt').textContent = 'TAMBAH PENGGUNA'; }
 });
@@ -1167,8 +1210,7 @@ $('uList').addEventListener('click', async e => {
     const u = UL.find(x => x.nip === nip); if (!u) return;
     UE = nip; $('ueMeta').textContent = 'NIP saat ini: ' + nip;
     $('ueNip').value = u.nip; $('ueNip').disabled = (nip === S.nip);
-    $('ueNama').value = u.nama; $('ueRole').value = u.role;
-    $('ueAkses').value = u.akses === '3pl' ? '3pl' : 'packing'; syncAkses();
+    $('ueNama').value = u.nama; $('ueRole').value = peranOf(u); syncHint();
     $('ue').classList.add('open'); return;
   }
   if (a === 'pw') { const p = prompt('Password baru untuk NIP ' + nip + ' (minimal 6 karakter):'); if (!p) return; body = { action: 'user_update', nip, password: p }; }
@@ -1186,13 +1228,13 @@ $('ueSave').onclick = async () => {
   if (!nip || !nama) return toast('NIP dan nama wajib diisi', false);
   const b = $('ueSave'); b.disabled = true;
   try {
-    const j = await api({ action: 'user_update', nip: UE, newNip: nip, nama, role: $('ueRole').value, akses: $('ueAkses').value });
+    const j = await api({ action: 'user_update', nip: UE, newNip: nip, nama, role: $('ueRole').value });
     if (UE === S.nip) { S.nama = nama; lsSet('sess', S); $('uInfo').textContent = '👤 ' + S.nama + ' · ' + (S.role === 'admin' ? 'Admin' : 'Petugas'); $('nama').value = S.nama; }
     renderUsers(j.users); $('ue').classList.remove('open'); toast('✅ Pengguna diperbarui', true);
   } catch (err) { toast('❌ ' + err.message, false); }
   finally { b.disabled = false; }
 };
-syncAkses();
+syncHint();
 
 /* ---------- Mulai ---------- */
 if (S) enterApp();
