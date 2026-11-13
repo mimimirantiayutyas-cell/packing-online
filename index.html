@@ -46,6 +46,9 @@ body.in #vLogin{display:none}
 .lerr{min-height:18px;margin:10px 2px 0;font-size:13px;font-weight:700;color:var(--red)}
 .ubar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 4px 12px;font-size:13px;font-weight:700}
 .ubar span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.save.b3{background:linear-gradient(180deg,#5cc0ff,#2a8fe6 60%,#1b75c9);box-shadow:0 7px 0 #1b64a8,0 18px 28px rgba(42,169,255,.3);color:#04223d}
+.save.b3:active{box-shadow:0 2px 0 #1b64a8}
+.save.b3 .spin{border-color:rgba(4,34,61,.3);border-top-color:#04223d}
 
 /* tab */
 .tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;background:#e6edf3;padding:5px;border-radius:16px;margin-bottom:14px}
@@ -158,6 +161,23 @@ td.no{color:var(--mut);width:56px}td.inv{font-weight:800;word-break:break-all}td
  td.ak{padding-top:8px}
 }
 
+/* sertim 3PL (KPI) */
+.kpi{display:none;margin-bottom:12px}
+body.m3pl .kpi{display:block}
+body.m3pl td.ak,body.m3pl thead th:last-child{display:none}
+.kt{margin:0 2px 8px;font-size:13px;font-weight:800;color:var(--txt)}
+.kg{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:10px}
+.kc{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.kc span{display:block;font-size:12px;color:var(--mut);font-weight:700}
+.kc b{font-size:24px;font-weight:800}
+.kd{background:#fff;border:1px solid var(--line);border-radius:14px;padding:0 14px;max-height:260px;overflow:auto}
+.kr{display:grid;grid-template-columns:90px 1fr 64px 64px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid #edf1f6;font-size:13px}
+.kr:last-child{border:0}
+.kr.h{position:sticky;top:0;background:#fff;font-size:12px;color:var(--mut);font-weight:700;z-index:1}
+.kr .n{text-align:right}
+.kbar{height:8px;border-radius:99px;background:#e6edf3;overflow:hidden}
+.kbar i{display:block;height:100%;background:linear-gradient(90deg,#3cf0b8,#10c88a)}
+
 /* pengguna (admin) */
 .card h3{margin:0 0 4px;font-size:16px}
 .urow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid #edf1f6}
@@ -224,6 +244,7 @@ td.no{color:var(--mut);width:56px}td.inv{font-weight:800;word-break:break-all}td
 
       <div class="lerr" id="lErr" role="alert"></div>
       <button class="save" id="lBtn" type="submit" style="margin-top:14px"><span class="spin"></span><span id="lTxt">LANJUT</span></button>
+      <button class="save b3" id="lBtn3" type="submit" style="display:none;margin-top:14px"><span class="spin"></span><span>MASUK SERTIM 3PL</span></button>
     </form>
   </div></div>
 
@@ -290,8 +311,18 @@ td.no{color:var(--mut);width:56px}td.inv{font-weight:800;word-break:break-all}td
       </form>
     </div></div>
 
-    <!-- ===== MONITORING ===== -->
+    <!-- ===== MONITORING / SERTIM 3PL ===== -->
     <div class="view" id="vMon">
+      <div class="kpi" id="kpi">
+        <div class="kt">KPI Sertim 3PL · 14 hari terakhir</div>
+        <div class="kg">
+          <div class="kc"><span>Invoice hari ini</span><b id="kInv">-</b></div>
+          <div class="kc"><span>Koli hari ini</span><b id="kKoli">-</b></div>
+          <div class="kc"><span>Invoice 14 hari</span><b id="kInv14">-</b></div>
+          <div class="kc"><span>Koli 14 hari</span><b id="kKoli14">-</b></div>
+        </div>
+        <div class="kd" id="kBody"></div>
+      </div>
       <div class="bar">
         <input type="date" id="tgl" aria-label="Filter tanggal">
         <input id="pic" list="picList" placeholder="Semua PIC (ketik nama)" aria-label="Filter PIC" autocomplete="off"><datalist id="picList"></datalist>
@@ -410,7 +441,7 @@ async function api(body) {
   return j;
 }
 
-/* ---------- Login 2 langkah ---------- */
+/* ---------- Login 2 langkah (Packing / Sertim 3PL) ---------- */
 let stepNip = '';
 async function postRaw(body) {
   const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
@@ -419,7 +450,7 @@ async function postRaw(body) {
   return j;
 }
 function resetLogin() {
-  stepNip = ''; $('lStep2').style.display = 'none';
+  stepNip = ''; $('lStep2').style.display = 'none'; $('lBtn3').style.display = 'none';
   $('lNama').value = ''; $('lPass').value = ''; $('lPass').type = 'password';
   $('lTxt').textContent = 'LANJUT';
 }
@@ -430,20 +461,21 @@ $('lf').addEventListener('submit', async e => {
   e.preventDefault();
   const nip = $('lNip').value.trim();
   if (!nip) return;
-  const b = $('lBtn'); $('lErr').textContent = ''; b.disabled = true;
+  const mode = e.submitter && e.submitter.id === 'lBtn3' ? '3pl' : 'pack';
+  const b = $('lBtn'), b3 = $('lBtn3'); $('lErr').textContent = ''; b.disabled = b3.disabled = true;
   try {
     if (!stepNip) {
       $('lTxt').textContent = 'MENCARI...';
       const j = await postRaw({ action: 'lookup', nip });
       stepNip = nip; $('lNama').value = j.nama;
-      $('lStep2').style.display = '';
+      $('lStep2').style.display = ''; b3.style.display = '';
       $('lPass').focus();
     } else {
       const pass = $('lPass').value;
       if (!pass) { $('lErr').textContent = 'Password wajib diisi'; $('lPass').focus(); return; }
       $('lTxt').textContent = 'MEMERIKSA...';
       const j = await postRaw({ action: 'login', nip: stepNip, password: pass });
-      S = { token: j.token, nip: j.nip, nama: j.nama, role: j.role, exp: j.exp };
+      S = { token: j.token, nip: j.nip, nama: j.nama, role: j.role, exp: j.exp, mode };
       lsSet('sess', S); resetLogin(); $('lNip').value = '';
       enterApp();
     }
@@ -451,20 +483,23 @@ $('lf').addEventListener('submit', async e => {
     $('lErr').textContent = err instanceof SyntaxError || err.name === 'TypeError' ? 'Tidak bisa terhubung ke server. Cek internet.' : err.message;
     if (stepNip) { $('lPass').value = ''; $('lPass').focus(); }
   } finally {
-    b.disabled = false; $('lTxt').textContent = stepNip ? 'MASUK' : 'LANJUT';
+    b.disabled = b3.disabled = false; $('lTxt').textContent = stepNip ? 'MASUK PACKING' : 'LANJUT';
   }
 });
 
 function enterApp() {
   document.body.classList.add('in');
-  const admin = S.role === 'admin';
-  $('uInfo').textContent = '👤 ' + S.nama + ' · ' + (admin ? 'Admin' : 'Petugas');
-  $('tabUsr').style.display = admin ? '' : 'none';
+  const admin = S.role === 'admin', p3 = S.mode === '3pl';
+  document.body.classList.toggle('m3pl', p3);
+  $('uInfo').textContent = '👤 ' + S.nama + ' · ' + (admin ? 'Admin' : 'Petugas') + (p3 ? ' · Sertim 3PL' : '');
+  $('tabIn').style.display = p3 ? 'none' : '';
+  $('tabUsr').style.display = admin && !p3 ? '' : 'none';
+  $('tabMon').textContent = p3 ? 'Sertim 3PL' : 'Monitoring';
   $('nama').value = S.nama; $('nama').readOnly = !admin; $('micNama').style.display = admin ? '' : 'none';
-  show(location.hash === '#monitoring' ? 'mon' : 'in');
+  show(p3 || location.hash === '#monitoring' ? 'mon' : 'in');
   fitSub();
   setTimeout(() => { if (S) loadMon(); }, 1500);
-  setTimeout(() => { loadZX().catch(() => {}); }, 2500);   // siapkan library scanner di latar belakang
+  if (!p3) setTimeout(() => { loadZX().catch(() => {}); }, 2500);   // siapkan library scanner di latar belakang
 }
 function logout(msg) {
   S = null; lsDel('sess'); lsDel('mon0');
@@ -472,7 +507,7 @@ function logout(msg) {
   if (reqCtl) reqCtl.abort();
   stopScan();
   resetLogin(); $('lNip').value = '';
-  document.body.classList.remove('in'); $('wrap').classList.remove('wide');
+  document.body.classList.remove('in', 'm3pl'); $('wrap').classList.remove('wide');
   $('lErr').textContent = typeof msg === 'string' ? msg : '';
   history.replaceState(null, '', location.pathname);
   chip(); fitSub();
@@ -489,11 +524,12 @@ function fitSub() {
 let monLoaded = false, picsLoaded = false;
 const TABS = { in: 'In', mon: 'Mon', usr: 'Usr' };
 function show(tab) {
+  if (S && S.mode === '3pl') tab = 'mon';
   if (tab === 'usr' && (!S || S.role !== 'admin')) tab = 'in';
   for (const k in TABS) { $('v' + TABS[k]).classList.toggle('on', k === tab); $('tab' + TABS[k]).classList.toggle('on', k === tab); }
   $('wrap').classList.toggle('wide', tab === 'mon');
   history.replaceState(null, '', tab === 'mon' ? '#monitoring' : '#input');
-  if (tab === 'mon') { if (!monLoaded) loadMon(); if (!picsLoaded) loadPics(); }
+  if (tab === 'mon') { if (!monLoaded) loadMon(); if (!picsLoaded) loadPics(); loadKpi(); }
   if (tab === 'usr') loadUsers();
 }
 $('tabIn').onclick = () => show('in');
@@ -861,6 +897,26 @@ async function loadPics() {
   } catch (e) { picsLoaded = false; }
 }
 
+/* ---------- KPI Sertim 3PL: total invoice & koli per hari ---------- */
+async function loadKpi() {
+  if (!S || S.mode !== '3pl') return;
+  try {
+    const r = await fetch(API_URL + '?' + new URLSearchParams({ action: 'kpi', days: 14, token: S.token }));
+    const j = await r.json();
+    if (j.code === 'auth') return logout(j.message);
+    if (j.status !== 'success') throw new Error(j.message || 'Respon API tidak valid');
+    const f = n => (n || 0).toLocaleString('id-ID');
+    const td = j.rows.find(x => x.tanggal === todayISO()) || { invoice: 0, koli: 0 };
+    $('kInv').textContent = f(td.invoice); $('kKoli').textContent = f(td.koli);
+    $('kInv14').textContent = f(j.totInvoice); $('kKoli14').textContent = f(j.totKoli);
+    const mx = Math.max(1, ...j.rows.map(x => x.invoice));
+    $('kBody').innerHTML = '<div class="kr h"><span>Tanggal</span><span></span><span class="n">Invoice</span><span class="n">Koli</span></div>' +
+      (j.rows.length
+        ? j.rows.map(x => '<div class="kr"><span>' + esc(tglID(x.tanggal)) + '</span><div class="kbar"><i style="width:' + Math.round(x.invoice / mx * 100) + '%"></i></div><span class="n"><b>' + f(x.invoice) + '</b></span><span class="n">' + f(x.koli) + '</span></div>').join('')
+        : '<div class="msg">Belum ada data.</div>');
+  } catch (e) { $('kBody').innerHTML = '<div class="msg err">Gagal memuat KPI: ' + esc(e.message) + '</div>'; }
+}
+
 async function loadMon(force) {
   if (!S) return;
   const key = new URLSearchParams({ action: 'list', page, per: PER, ...filters() }).toString();
@@ -924,7 +980,7 @@ $('pic').addEventListener('input', deb(refilter, 450));
 $('pic').addEventListener('focus', e => e.target.select());
 $('q').addEventListener('input', deb(refilter, 450));
 $('reset').onclick = () => { $('tgl').value = ''; $('pic').value = ''; $('kurir').value = ''; $('q').value = ''; refilter(); };
-$('reload').onclick = () => { CACHE.clear(); picsLoaded = false; loadPics(); loadMon(true); };
+$('reload').onclick = () => { CACHE.clear(); picsLoaded = false; loadPics(); loadMon(true); loadKpi(); };
 $('pager').addEventListener('click', e => { const b = e.target.closest('button[data-p]'); if (!b) return; page += +b.dataset.p; loadMon(); $('tbwrap').scrollTop = 0; });
 
 /* ---------- Galeri foto ---------- */
