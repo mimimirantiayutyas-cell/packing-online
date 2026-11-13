@@ -339,7 +339,6 @@ body.m3pl td.ak,body.m3pl thead th:last-child{display:none}
         <input id="pic" list="picList" placeholder="Semua PIC (ketik nama)" aria-label="Filter PIC" autocomplete="off"><datalist id="picList"></datalist>
         <select id="kurir" aria-label="Filter pengiriman"><option value="">Semua pengiriman</option></select>
         <input type="search" id="q" placeholder="Cari invoice" aria-label="Cari invoice">
-        <button id="reset" type="button">Tampilkan semua</button>
         <button id="reload" type="button" style="background:#2a8fe6">Muat ulang</button>
       </div>
       <div id="ldbar"><i></i></div>
@@ -1064,7 +1063,7 @@ function applyData(j) {
 }
 
 function renderTable() {
-  if (!CUR.length) { $('list').innerHTML = emptyRow('Tidak ada data untuk filter ini. Tekan "Tampilkan semua" untuk melihat semua data.'); return; }
+  if (!CUR.length) { $('list').innerHTML = emptyRow('Tidak ada data untuk filter ini. Tekan "Muat ulang" untuk menghapus filter.'); return; }
   const from = (page - 1) * PER;
   $('list').innerHTML = CUR.map((d, i) => {
     const n = d.fotos.length;
@@ -1080,12 +1079,22 @@ function renderTable() {
 const deb = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
 const refilter = () => { page = 1; loadMon(); };
 ['tgl1', 'tgl2', 'kurir'].forEach(id => $(id).addEventListener('change', refilter));
-$('pic').addEventListener('input', deb(refilter, 280));
-$('pic').addEventListener('change', refilter);
+let lastQ = '', lastPic = '';
+const picRefilter = () => { const v = $('pic').value.trim(); if (v === lastPic) return; lastPic = v; refilter(); };
+$('pic').addEventListener('input', deb(picRefilter, 350));
+$('pic').addEventListener('change', picRefilter);
 $('pic').addEventListener('focus', e => e.target.select());
-$('q').addEventListener('input', deb(refilter, 280));
-$('reset').onclick = () => { $('tgl1').value = ''; $('tgl2').value = ''; $('pic').value = ''; $('kurir').value = ''; $('q').value = ''; refilter(); };
-$('reload').onclick = () => { clearCache(); picsLoaded = false; loadPics(); loadMon(true); };
+// cari invoice: baru dikirim setelah minimal 3 karakter (atau kosong), supaya tidak banyak permintaan sia-sia
+const qRefilter = () => { const v = $('q').value.trim(); if ((v.length > 0 && v.length < 3) || v === lastQ) return; lastQ = v; refilter(); };
+$('q').addEventListener('input', deb(qRefilter, 350));
+$('q').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); lastQ = $('q').value.trim(); refilter(); } });
+// Muat ulang: hapus semua filter lalu ambil data terbaru
+$('reload').onclick = () => {
+  $('tgl1').value = ''; $('tgl2').value = ''; $('pic').value = ''; $('kurir').value = ''; $('q').value = '';
+  lastQ = ''; lastPic = '';
+  clearCache(); picsLoaded = false; loadPics();
+  page = 1; loadMon(true);
+};
 $('pager').addEventListener('click', e => { const b = e.target.closest('button[data-p]'); if (!b) return; page += +b.dataset.p; loadMon(); $('tbwrap').scrollTop = 0; });
 
 /* ---------- Galeri foto ---------- */
