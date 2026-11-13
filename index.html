@@ -344,8 +344,13 @@ body.m3pl td.ak,body.m3pl thead th:last-child{display:none}
           <div><label for="uNip">NIP</label><input id="uNip" required placeholder="NIP"></div>
           <div><label for="uRole">Peran</label><select id="uRole"><option value="staff">Petugas</option><option value="admin">Admin</option></select></div>
         </div>
+        <div id="uAksesBox">
+          <label for="uAkses">Akses portal</label>
+          <select id="uAkses"><option value="packing">Packing</option><option value="3pl">Sertim 3PL</option></select>
+        </div>
         <label for="uNama">Nama</label><input id="uNama" required autocapitalize="characters" placeholder="Nama lengkap">
         <label for="uPass">Password awal</label><input id="uPass" required minlength="6" placeholder="Minimal 6 karakter">
+        <div class="hint" id="uHint" style="color:var(--mut)">Admin otomatis bisa masuk ke Packing dan Sertim 3PL.</div>
         <button class="save" id="uBtn" type="submit" style="margin-top:18px;font-size:15px;padding:14px"><span class="spin"></span><span id="uTxt">TAMBAH PENGGUNA</span></button>
       </form>
       <h3 style="margin-top:26px">Daftar pengguna</h3>
@@ -406,6 +411,10 @@ body.m3pl td.ak,body.m3pl thead th:last-child{display:none}
   <label for="ueNip">NIP</label><input id="ueNip" autocomplete="off">
   <label for="ueNama">Nama</label><input id="ueNama" autocapitalize="characters" autocomplete="off">
   <label for="ueRole">Peran</label><select id="ueRole"><option value="staff">Petugas</option><option value="admin">Admin</option></select>
+  <div id="ueAksesBox">
+    <label for="ueAkses">Akses portal</label>
+    <select id="ueAkses"><option value="packing">Packing</option><option value="3pl">Sertim 3PL</option></select>
+  </div>
   <div class="edact"><button type="button" id="ueCancel">Batal</button><button type="button" class="ok" id="ueSave">Simpan</button></div>
 </div></div>
 <div id="toast"></div>
@@ -441,8 +450,11 @@ async function api(body) {
   return j;
 }
 
-/* ---------- Login 2 langkah (Packing / Sertim 3PL) ---------- */
-let stepNip = '';
+/* ---------- Login 2 langkah: NIP dulu, lalu tombol portal sesuai akses NIP ----------
+   akses 'packing' -> hanya tombol MASUK PACKING
+   akses '3pl'     -> hanya tombol MASUK SERTIM 3PL
+   akses 'semua'   -> admin, kedua tombol tampil */
+let stepNip = '', stepAkses = '';
 async function postRaw(body) {
   const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
   const j = await r.json();
@@ -450,7 +462,8 @@ async function postRaw(body) {
   return j;
 }
 function resetLogin() {
-  stepNip = ''; $('lStep2').style.display = 'none'; $('lBtn3').style.display = 'none';
+  stepNip = ''; stepAkses = '';
+  $('lStep2').style.display = 'none'; $('lBtn3').style.display = 'none'; $('lBtn').style.display = '';
   $('lNama').value = ''; $('lPass').value = ''; $('lPass').type = 'password';
   $('lTxt').textContent = 'LANJUT';
 }
@@ -461,21 +474,24 @@ $('lf').addEventListener('submit', async e => {
   e.preventDefault();
   const nip = $('lNip').value.trim();
   if (!nip) return;
-  const mode = e.submitter && e.submitter.id === 'lBtn3' ? '3pl' : 'pack';
   const b = $('lBtn'), b3 = $('lBtn3'); $('lErr').textContent = ''; b.disabled = b3.disabled = true;
   try {
     if (!stepNip) {
       $('lTxt').textContent = 'MENCARI...';
       const j = await postRaw({ action: 'lookup', nip });
-      stepNip = nip; $('lNama').value = j.nama;
-      $('lStep2').style.display = ''; b3.style.display = '';
+      stepNip = nip; stepAkses = j.akses || 'packing'; $('lNama').value = j.nama;
+      $('lStep2').style.display = '';
+      b.style.display  = stepAkses === '3pl' ? 'none' : '';        // tombol Packing: untuk akses packing & admin
+      b3.style.display = stepAkses === 'packing' ? 'none' : '';    // tombol Sertim 3PL: untuk akses 3pl & admin
       $('lPass').focus();
     } else {
       const pass = $('lPass').value;
       if (!pass) { $('lErr').textContent = 'Password wajib diisi'; $('lPass').focus(); return; }
+      // portal yang dipilih: tombol 3PL, atau (tekan Enter) satu-satunya portal yang boleh
+      const mode = ((e.submitter && e.submitter.id === 'lBtn3') || stepAkses === '3pl') ? '3pl' : 'pack';
       $('lTxt').textContent = 'MEMERIKSA...';
-      const j = await postRaw({ action: 'login', nip: stepNip, password: pass });
-      S = { token: j.token, nip: j.nip, nama: j.nama, role: j.role, exp: j.exp, mode };
+      const j = await postRaw({ action: 'login', nip: stepNip, password: pass, mode });
+      S = { token: j.token, nip: j.nip, nama: j.nama, role: j.role, exp: j.exp, mode: j.mode || mode };
       lsSet('sess', S); resetLogin(); $('lNip').value = '';
       enterApp();
     }
@@ -1058,11 +1074,12 @@ $('eSave').onclick = async () => {
 };
 
 /* ---------- Pengguna (khusus admin) ---------- */
+const AKSES_LBL = { packing: 'Packing', '3pl': 'Sertim 3PL', semua: 'Packing + Sertim 3PL' };
 let UL = [], UE = '';
 function renderUsers(list) {
   UL = list;
   $('uList').innerHTML = list.length ? list.map(u =>
-    '<div class="urow' + (u.aktif ? '' : ' off') + '"><div class="ui"><b>' + esc(u.nama) + '</b><div class="meta">NIP ' + esc(u.nip) + ' · ' + (u.role === 'admin' ? 'Admin' : 'Petugas') + (u.aktif ? '' : ' · Nonaktif') + '</div></div>' +
+    '<div class="urow' + (u.aktif ? '' : ' off') + '"><div class="ui"><b>' + esc(u.nama) + '</b><div class="meta">NIP ' + esc(u.nip) + ' · ' + (u.role === 'admin' ? 'Admin' : 'Petugas') + ' · Akses: ' + esc(AKSES_LBL[u.akses] || 'Packing') + (u.aktif ? '' : ' · Nonaktif') + '</div></div>' +
     '<div class="uact"><button type="button" class="ebtn" data-a="edit" data-n="' + esc(u.nip) + '">✏️ Edit</button>' +
     '<button type="button" class="ebtn" data-a="pw" data-n="' + esc(u.nip) + '">Reset password</button>' +
     '<button type="button" class="ebtn" data-a="tog" data-n="' + esc(u.nip) + '" data-v="' + (u.aktif ? 0 : 1) + '">' + (u.aktif ? 'Nonaktifkan' : 'Aktifkan') + '</button>' +
@@ -1073,13 +1090,20 @@ async function loadUsers() {
   try { renderUsers((await api({ action: 'users' })).users); }
   catch (e) { $('uList').innerHTML = '<div class="msg err">Gagal memuat: ' + esc(e.message) + '</div>'; }
 }
+// kolom "Akses portal" disembunyikan bila peran = Admin (admin otomatis bisa keduanya)
+const syncAkses = () => {
+  $('uAksesBox').style.display = $('uRole').value === 'admin' ? 'none' : '';
+  $('ueAksesBox').style.display = $('ueRole').value === 'admin' ? 'none' : '';
+};
+$('uRole').addEventListener('change', syncAkses);
+$('ueRole').addEventListener('change', syncAkses);
 $('uNama').addEventListener('input', e => e.target.value = e.target.value.toUpperCase());
 $('uf').addEventListener('submit', async e => {
   e.preventDefault();
   const b = $('uBtn'); b.disabled = true; $('uTxt').textContent = 'MENYIMPAN...';
   try {
-    const j = await api({ action: 'user_add', nip: $('uNip').value.trim(), nama: $('uNama').value.trim(), password: $('uPass').value, role: $('uRole').value });
-    renderUsers(j.users); $('uf').reset(); toast('✅ Pengguna ditambahkan', true);
+    const j = await api({ action: 'user_add', nip: $('uNip').value.trim(), nama: $('uNama').value.trim(), password: $('uPass').value, role: $('uRole').value, akses: $('uAkses').value });
+    renderUsers(j.users); $('uf').reset(); syncAkses(); toast('✅ Pengguna ditambahkan', true);
   } catch (err) { toast('❌ ' + err.message, false); }
   finally { b.disabled = false; $('uTxt').textContent = 'TAMBAH PENGGUNA'; }
 });
@@ -1091,6 +1115,7 @@ $('uList').addEventListener('click', async e => {
     UE = nip; $('ueMeta').textContent = 'NIP saat ini: ' + nip;
     $('ueNip').value = u.nip; $('ueNip').disabled = (nip === S.nip);
     $('ueNama').value = u.nama; $('ueRole').value = u.role;
+    $('ueAkses').value = u.akses === '3pl' ? '3pl' : 'packing'; syncAkses();
     $('ue').classList.add('open'); return;
   }
   if (a === 'pw') { const p = prompt('Password baru untuk NIP ' + nip + ' (minimal 6 karakter):'); if (!p) return; body = { action: 'user_update', nip, password: p }; }
@@ -1108,12 +1133,13 @@ $('ueSave').onclick = async () => {
   if (!nip || !nama) return toast('NIP dan nama wajib diisi', false);
   const b = $('ueSave'); b.disabled = true;
   try {
-    const j = await api({ action: 'user_update', nip: UE, newNip: nip, nama, role: $('ueRole').value });
+    const j = await api({ action: 'user_update', nip: UE, newNip: nip, nama, role: $('ueRole').value, akses: $('ueAkses').value });
     if (UE === S.nip) { S.nama = nama; lsSet('sess', S); $('uInfo').textContent = '👤 ' + S.nama + ' · ' + (S.role === 'admin' ? 'Admin' : 'Petugas'); $('nama').value = S.nama; }
     renderUsers(j.users); $('ue').classList.remove('open'); toast('✅ Pengguna diperbarui', true);
   } catch (err) { toast('❌ ' + err.message, false); }
   finally { b.disabled = false; }
 };
+syncAkses();
 
 /* ---------- Mulai ---------- */
 if (S) enterApp();
