@@ -46,6 +46,10 @@ body.in #vLogin{display:none}
 .lerr{min-height:18px;margin:10px 2px 0;font-size:13px;font-weight:700;color:var(--red)}
 .ptag{margin-top:12px;display:inline-block;font-size:12px;font-weight:800;letter-spacing:.6px;padding:6px 12px;border-radius:999px;background:#e8fbf3;color:#0a8a60}
 .ptag.b3{background:#e6f3ff;color:#1b64a8}
+/* login: tampilan asli dipertahankan, hanya dibuat ringan */
+.cube{will-change:transform}
+#vLogin input{box-shadow:none}
+.lerr:empty{min-height:0;margin:0}
 .ubar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 4px 12px;font-size:13px;font-weight:700}
 .ubar span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .save.b3{background:linear-gradient(180deg,#5cc0ff,#2a8fe6 60%,#1b75c9);box-shadow:0 7px 0 #1b64a8,0 18px 28px rgba(42,169,255,.3);color:#04223d}
@@ -119,7 +123,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .sbox h3{margin:0 0 4px;font-size:17px}.sbox p{margin:0 0 10px;font-size:12.5px;color:#8fa3c4}
 #vwrap{position:relative;width:100%;aspect-ratio:3/4;max-height:60vh;border-radius:14px;overflow:hidden;background:#000}
 #vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-#guide{position:absolute;left:3%;width:94%;top:30%;height:40%;border:2px solid rgba(255,255,255,.92);border-radius:12px;box-shadow:0 0 0 999px rgba(0,0,0,.45);pointer-events:none}
+#guide{position:absolute;left:3%;width:94%;top:25%;height:50%;border:2px solid rgba(255,255,255,.92);border-radius:12px;box-shadow:0 0 0 999px rgba(0,0,0,.45);pointer-events:none}
 #guide::after{content:"";position:absolute;left:6px;right:6px;top:50%;height:2px;background:#ff4560;box-shadow:0 0 8px #ff4560;animation:ln 1.6s ease-in-out infinite alternate}
 @keyframes ln{from{top:12%}to{top:88%}}
 #sInfo{white-space:pre-line;overflow-wrap:anywhere;margin-top:4px;font-size:11px;color:#5d7096;text-align:center}
@@ -322,6 +326,14 @@ body.m3pl td.ak,body.m3pl thead th:last-child{display:none}
 
     <!-- ===== MONITORING / SERTIM 3PL ===== -->
     <div class="view" id="vMon">
+      <div class="bar">
+        <input type="date" id="tgl" aria-label="Filter tanggal">
+        <input id="pic" list="picList" placeholder="Semua PIC (ketik nama)" aria-label="Filter PIC" autocomplete="off"><datalist id="picList"></datalist>
+        <select id="kurir" aria-label="Filter pengiriman"><option value="">Semua pengiriman</option></select>
+        <input type="search" id="q" placeholder="Cari invoice" aria-label="Cari invoice">
+        <button id="reset" type="button">Tampilkan semua</button>
+        <button id="reload" type="button" style="background:#2a8fe6">Muat ulang</button>
+      </div>
       <div class="kpi" id="kpi">
         <div class="kt">KPI Sertim 3PL · 14 hari terakhir</div>
         <div class="kg">
@@ -331,14 +343,6 @@ body.m3pl td.ak,body.m3pl thead th:last-child{display:none}
           <div class="kc"><span>Koli 14 hari</span><b id="kKoli14">-</b></div>
         </div>
         <div class="kd" id="kBody"></div>
-      </div>
-      <div class="bar">
-        <input type="date" id="tgl" aria-label="Filter tanggal">
-        <input id="pic" list="picList" placeholder="Semua PIC (ketik nama)" aria-label="Filter PIC" autocomplete="off"><datalist id="picList"></datalist>
-        <select id="kurir" aria-label="Filter pengiriman"><option value="">Semua pengiriman</option></select>
-        <input type="search" id="q" placeholder="Cari invoice" aria-label="Cari invoice">
-        <button id="reset" type="button">Tampilkan semua</button>
-        <button id="reload" type="button" style="background:#2a8fe6">Muat ulang</button>
       </div>
       <div class="stats" id="stats"></div>
       <div class="tbwrap" id="tbwrap"><table><thead><tr><th>No</th><th>Tanggal</th><th>Invoice</th><th>PIC</th><th>Pengiriman</th><th>Koli</th><th>Foto</th><th>Aksi</th></tr></thead><tbody id="list"></tbody></table></div>
@@ -532,7 +536,7 @@ function enterApp() {
   show(p3 || location.hash === '#monitoring' ? 'mon' : 'in');
   fitSub();
   setTimeout(() => { if (S) loadMon(); }, 1500);
-  if (!p3) setTimeout(() => { loadZX().catch(() => {}); }, 2500);   // siapkan library scanner di latar belakang
+  if (!p3) setTimeout(() => { loadZX().catch(() => {}); }, ('BarcodeDetector' in window) ? 4000 : 600);   // siapkan library scanner di latar belakang
 }
 function logout(msg) {
   S = null; lsDel('sess'); lsDel('mon0');
@@ -638,7 +642,7 @@ function sharpness() {          // rata-rata perubahan terang-gelap horizontal: 
   for (let y = 0; y < h; y += 2) for (let x = 0; x < w - 1; x++) { const i = (y * w + x) * 4; sum += Math.abs(d[i] - d[i + 4]); n++; }
   return sum / n;
 }
-const G = { x: .03, w: .94, y: .30, h: .40 };   // kotak panduan (pecahan dari area video)
+const G = { x: .03, w: .94, y: .25, h: .50 };   // kotak panduan (pecahan dari area video)
 
 function loadZX() {
   if (window.ZXing) return Promise.resolve();
@@ -655,18 +659,21 @@ function loadZX() {
   });
   return zxP;
 }
-function zxDecode(canvas) {
+let zxF = null, zxH = null;
+function zxMake(hard) {
+  const Z = window.ZXing, h = new Map();
+  h.set(Z.DecodeHintType.POSSIBLE_FORMATS, [Z.BarcodeFormat.CODE_128, Z.BarcodeFormat.CODE_39, Z.BarcodeFormat.CODE_93, Z.BarcodeFormat.ITF, Z.BarcodeFormat.CODABAR, Z.BarcodeFormat.EAN_13, Z.BarcodeFormat.QR_CODE, Z.BarcodeFormat.DATA_MATRIX]);
+  if (hard) h.set(Z.DecodeHintType.TRY_HARDER, true);
+  const r = new Z.MultiFormatReader(); r.setHints(h); return r;
+}
+function zxDecode(canvas, hard) {
   try {
     const Z = window.ZXing;
-    if (!zxR) {
-      const h = new Map();
-      h.set(Z.DecodeHintType.POSSIBLE_FORMATS, [Z.BarcodeFormat.CODE_128, Z.BarcodeFormat.CODE_39, Z.BarcodeFormat.CODE_93, Z.BarcodeFormat.ITF, Z.BarcodeFormat.CODABAR, Z.BarcodeFormat.EAN_13, Z.BarcodeFormat.EAN_8, Z.BarcodeFormat.UPC_A, Z.BarcodeFormat.UPC_E, Z.BarcodeFormat.QR_CODE, Z.BarcodeFormat.DATA_MATRIX]);
-      h.set(Z.DecodeHintType.TRY_HARDER, true);
-      zxR = new Z.MultiFormatReader(); zxR.setHints(h);
-    }
+    const rd = hard ? (zxH || (zxH = zxMake(true))) : (zxF || (zxF = zxMake(false)));
     const bm = new Z.BinaryBitmap(new Z.HybridBinarizer(new Z.HTMLCanvasElementLuminanceSource(canvas)));
-    return zxR.decodeWithState(bm).getText() || '';
-  } catch (e) { return ''; }
+    const r = rd.decodeWithState(bm);
+    return { t: r.getText() || '', c128: r.getBarcodeFormat() === Z.BarcodeFormat.CODE_128 };
+  } catch (e) { return null; }
 }
 function cropRect() {
   const cw = vid.clientWidth, ch = vid.clientHeight, vw = vid.videoWidth, vh = vid.videoHeight;
@@ -695,11 +702,11 @@ function gotInv(inv) {
   $('invoice').value = inv; beep(); if (navigator.vibrate) navigator.vibrate(120);
   stopScan(); toast('✅ Barcode terbaca: ' + inv, true);
 }
-function handle(inv, seen, fast) {
-  if (inv && fast) { gotInv(inv); return; }   // detektor bawaan sudah punya checksum, langsung terima
+function handle(inv, seen, sure) {
+  if (inv && sure) { gotInv(inv); return; }   // detektor bawaan / Code128 punya checksum, langsung terima
   if (inv) {
     const now = Date.now();
-    if (inv === lastHit && now - lastAt < 2500) hitCnt++; else { lastHit = inv; hitCnt = 1; }
+    if (inv === lastHit && now - lastAt < 3000) hitCnt++; else { lastHit = inv; hitCnt = 1; }
     lastAt = now; sMsg('Membaca ' + inv + '...');
     if (hitCnt >= 2) gotInv(inv);
   } else if (seen) {
@@ -708,60 +715,67 @@ function handle(inv, seen, fast) {
 }
 async function scanTick(id) {
   if (id !== scanId) return;
-  let found = '', seen = '', fast = false;
+  let found = '', seen = '', sure = false;
   try {
     if (vid.readyState >= 2 && vid.videoWidth) {
       tickN++;
+      // hanya area kotak panduan yang diproses (jauh lebih ringan dari seluruh frame)
+      const c = cropRect(), W = det ? 1280 : (tickN % 2 ? 960 : 1600), k = Math.min(1, W / c.sw);
+      cnv.width = Math.max(1, Math.round(c.sw * k)); cnv.height = Math.max(1, Math.round(c.sh * k));
+      cctx.drawImage(vid, c.sx, c.sy, c.sw, c.sh, 0, 0, cnv.width, cnv.height);
       if (det) {
         try {
-          const r = await det.detect(vid);
-          for (const b of r) { const t = b.rawValue || ''; if (!seen) seen = '[' + b.format + '] ' + t; const i = pickInv(t); if (i) { found = i; fast = true; break; } }
+          const r = await det.detect(cnv);
+          for (const b of r) { const t = b.rawValue || ''; if (!seen) seen = '[' + b.format + '] ' + t; const i = pickInv(t); if (i) { found = i; sure = true; break; } }
         } catch (e) { det = null; }
       }
-      if (!found && window.ZXing && (!det || tickN % 2 === 0)) {
-        const c = cropRect(), k = tickN % 2 ? Math.min(1, 1280 / c.sw) : 1;   // selang-seling: resolusi penuh & diperkecil
-        cnv.width = Math.max(1, Math.round(c.sw * k)); cnv.height = Math.max(1, Math.round(c.sh * k));
-        cctx.drawImage(vid, c.sx, c.sy, c.sw, c.sh, 0, 0, cnv.width, cnv.height);
-        const t = zxDecode(cnv); if (t) { if (!seen) seen = t; const i = pickInv(t); if (i) found = i; }
+      if (!found && window.ZXing && (!det || tickN % 3 === 0)) {
+        const z = zxDecode(cnv, !det && tickN % 2 === 0);
+        if (z && z.t) { if (!seen) seen = z.t; const i = pickInv(z.t); if (i) { found = i; sure = z.c128; } }
       }
     }
   } catch (e) {}
   if (id !== scanId) return;
-  handle(found, seen, fast);
-  if (!found && !seen && tickN % 4 === 0 && vid.videoWidth) {
+  handle(found, seen, sure);
+  if (!found && !seen && tickN % 6 === 0 && vid.videoWidth) {
     try {
       const sh = sharpness(); shMax = Math.max(shMax * .997, sh);
       if (sh < shMax * .6 || sh < 6) sMsg('Gambar buram. Jauhkan HP 5-10 cm lalu ketuk layar untuk fokus ulang.', true);
       else sMsg('Gambar tajam. Tahan HP, pastikan barcode INV di dalam kotak.');
     } catch (e) {}
   }
-  loopT = setTimeout(() => scanTick(id), det ? 30 : 70);
+  loopT = setTimeout(() => scanTick(id), det ? 0 : 15);
 }
 const adv = o => track ? track.applyConstraints({ advanced: [o] }).catch(() => {}) : Promise.resolve();
 
+const WANT = ['code_128', 'code_39', 'code_93', 'codabar', 'itf', 'ean_13', 'qr_code', 'data_matrix'];   // format terbatas = deteksi lebih cepat
+async function openStream() {
+  let lastErr;
+  for (const sz of [[1920, 1080], [1280, 720], null]) {
+    try {
+      return await navigator.mediaDevices.getUserMedia({ audio: false, video: sz ? { facingMode: { ideal: 'environment' }, width: { ideal: sz[0] }, height: { ideal: sz[1] } } : { facingMode: { ideal: 'environment' } } });
+    } catch (e) { lastErr = e; if (/NotAllowed|Permission|Security/i.test(e && e.name)) break; }
+  }
+  throw lastErr || new Error('Kamera tidak bisa dibuka');
+}
+
 async function startCam() {
   const id = ++scanId;
-  killCam(); lastHit = ''; hitCnt = 0; torchOn = false; det = null;
+  killCam(); lastHit = ''; hitCnt = 0; torchOn = false; det = null; shMax = 0;
   $('sRetry').style.display = 'none'; $('zoomRow').style.display = 'none'; $('torchBtn').style.display = 'none'; sMsg('Membuka kamera...'); $('sInfo').textContent = '';
+  let camP = null;
   try {
     if (!window.isSecureContext || !navigator.mediaDevices) throw new Error('Kamera hanya bisa lewat https. Buka lewat Safari (iPhone) atau Chrome (Android), bukan dari dalam WhatsApp/Instagram.');
+    camP = openStream(); camP.catch(() => {});          // kamera dibuka langsung, tanpa menunggu library
     if ('BarcodeDetector' in window) {
       try {
-        const f = await BarcodeDetector.getSupportedFormats();
-        if (f.length) { det = new BarcodeDetector({ formats: f }); fmtInfo = f.join(','); }   // semua format yang didukung HP
+        const f = await BarcodeDetector.getSupportedFormats(), use = WANT.filter(x => f.includes(x));
+        if (use.length) { det = new BarcodeDetector({ formats: use }); fmtInfo = use.join(','); }
       } catch (e) { det = null; }
     }
     const zx = loadZX();
     if (det) zx.catch(() => {}); else await zx;      // tanpa detektor bawaan, ZXing wajib
-    let lastErr, got = null;
-    const sizes = [[2560, 1440], [1920, 1080], [1280, 720], null];
-    for (const sz of sizes) {
-      try {
-        got = await navigator.mediaDevices.getUserMedia({ audio: false, video: sz ? { facingMode: { ideal: 'environment' }, width: { ideal: sz[0] }, height: { ideal: sz[1] } } : { facingMode: { ideal: 'environment' } } });
-        break;
-      } catch (e) { lastErr = e; if (/NotAllowed|Permission|Security/i.test(e && e.name)) break; }
-    }
-    if (!got) throw lastErr || new Error('Kamera tidak bisa dibuka');
+    const got = await camP;
     if (id !== scanId) { got.getTracks().forEach(t => t.stop()); return; }
     stream = got; track = stream.getVideoTracks()[0];
     try { caps = track.getCapabilities ? track.getCapabilities() : {}; } catch (e) { caps = {}; }
@@ -770,7 +784,7 @@ async function startCam() {
     if (caps.focusMode && caps.focusMode.includes('continuous')) await adv({ focusMode: 'continuous' });
     if (caps.zoom && caps.zoom.max > caps.zoom.min) {
       const zr = $('zoom'); zr.min = caps.zoom.min; zr.max = caps.zoom.max; zr.step = caps.zoom.step || 0.1;
-      zr.value = caps.zoom.min;
+      zr.value = Math.min(caps.zoom.max, Math.max(caps.zoom.min, 1.5));   // zoom awal 1.5x supaya barcode lebih besar
       adv({ zoom: +zr.value }); zr.oninput = () => adv({ zoom: +zr.value });
       $('zoomRow').style.display = 'flex';
     }
@@ -779,10 +793,11 @@ async function startCam() {
       b.onclick = async () => { torchOn = !torchOn; await adv({ torch: torchOn }); b.classList.toggle('on', torchOn); };
     }
     const st = track.getSettings ? track.getSettings() : {};
-    $('sInfo').textContent = 'v6 · ' + (st.width || vid.videoWidth) + '×' + (st.height || vid.videoHeight) + ' · ' + (det ? 'detektor bawaan + ZXing' : 'ZXing') + (fmtInfo ? '\nformat: ' + fmtInfo : '');
+    $('sInfo').textContent = 'v7 · ' + (st.width || vid.videoWidth) + '×' + (st.height || vid.videoHeight) + ' · ' + (det ? 'detektor bawaan + ZXing' : 'ZXing') + (fmtInfo && det ? '\nformat: ' + fmtInfo : '');
     sMsg('Arahkan ke barcode INV paling atas');
     scanTick(id);
   } catch (err) {
+    if (camP) camP.then(s => s.getTracks().forEach(t => t.stop())).catch(() => {});
     if (id !== scanId) return;
     killCam();
     const nm = String((err && err.name) || ''), raw = String((err && err.message) || err || '');
