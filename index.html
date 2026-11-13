@@ -157,7 +157,15 @@ td.no{color:var(--mut);width:56px}td.inv{font-weight:800;word-break:break-all}td
 .pager{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;font-size:13px;color:var(--mut)}
 .pager button{padding:9px 16px;border:1px solid var(--line);border-radius:10px;background:#fff;font:700 13px 'Inter',sans-serif;color:var(--txt);cursor:pointer}
 .pager button:disabled{opacity:.4;cursor:default}
-.tbwrap.busy tbody{opacity:.45;transition:opacity .15s}
+.tbwrap.busy tbody{opacity:.6}
+.dr{display:flex;align-items:center;gap:6px;grid-column:span 2;min-width:0}
+.dr input{min-width:0;flex:1}
+.dr span{font-size:12px;font-weight:800;color:var(--mut);flex:none}
+@media (max-width:420px){.dr{grid-column:1/-1}}
+#ldbar{height:3px;margin:0 0 8px;border-radius:99px;overflow:hidden;opacity:0;transition:opacity .15s}
+#ldbar.on{opacity:1}
+#ldbar i{display:block;width:40%;height:100%;background:#10c88a;border-radius:99px;animation:ldb .9s ease-in-out infinite alternate;will-change:transform}
+@keyframes ldb{from{transform:translateX(-10%)}to{transform:translateX(150%)}}
 @media (max-width:760px){
  .tbwrap{max-height:none;border:0;background:transparent;overflow:visible}
  thead{display:none}table,tbody,tr,td{display:block}
@@ -327,20 +335,21 @@ body.m3pl td.ak,body.m3pl thead th:last-child{display:none}
     <!-- ===== MONITORING / SERTIM 3PL ===== -->
     <div class="view" id="vMon">
       <div class="bar">
-        <input type="date" id="tgl" aria-label="Filter tanggal">
+        <div class="dr"><input type="date" id="tgl1" aria-label="Dari tanggal" title="Dari tanggal"><span>s/d</span><input type="date" id="tgl2" aria-label="Sampai tanggal" title="Sampai tanggal"></div>
         <input id="pic" list="picList" placeholder="Semua PIC (ketik nama)" aria-label="Filter PIC" autocomplete="off"><datalist id="picList"></datalist>
         <select id="kurir" aria-label="Filter pengiriman"><option value="">Semua pengiriman</option></select>
         <input type="search" id="q" placeholder="Cari invoice" aria-label="Cari invoice">
         <button id="reset" type="button">Tampilkan semua</button>
         <button id="reload" type="button" style="background:#2a8fe6">Muat ulang</button>
       </div>
+      <div id="ldbar"><i></i></div>
       <div class="kpi" id="kpi">
-        <div class="kt">KPI Sertim 3PL · 14 hari terakhir</div>
+        <div class="kt" id="kTitle">KPI Sertim 3PL · 14 hari terakhir</div>
         <div class="kg">
-          <div class="kc"><span>Invoice hari ini</span><b id="kInv">-</b></div>
-          <div class="kc"><span>Koli hari ini</span><b id="kKoli">-</b></div>
-          <div class="kc"><span>Invoice 14 hari</span><b id="kInv14">-</b></div>
-          <div class="kc"><span>Koli 14 hari</span><b id="kKoli14">-</b></div>
+          <div class="kc"><span id="kL1">Invoice hari ini</span><b id="kInv">-</b></div>
+          <div class="kc"><span id="kL2">Koli hari ini</span><b id="kKoli">-</b></div>
+          <div class="kc"><span id="kL3">Invoice 14 hari</span><b id="kInv14">-</b></div>
+          <div class="kc"><span id="kL4">Koli 14 hari</span><b id="kKoli14">-</b></div>
         </div>
         <div class="kd" id="kBody"></div>
       </div>
@@ -566,7 +575,7 @@ function show(tab) {
   for (const k in TABS) { $('v' + TABS[k]).classList.toggle('on', k === tab); $('tab' + TABS[k]).classList.toggle('on', k === tab); }
   $('wrap').classList.toggle('wide', tab === 'mon');
   history.replaceState(null, '', tab === 'mon' ? '#monitoring' : '#input');
-  if (tab === 'mon') { if (!monLoaded) loadMon(); if (!picsLoaded) loadPics(); loadKpi(); }
+  if (tab === 'mon') { if (!monLoaded) loadMon(); if (!picsLoaded) loadPics(); }
   if (tab === 'usr') loadUsers();
 }
 $('tabIn').onclick = () => show('in');
@@ -925,13 +934,18 @@ const dlUrl = u => 'https://drive.google.com/uc?export=download&id=' + fileId(u)
 const tglID = iso => { const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? m[3] + '/' + m[2] + '/' + m[1] : iso; };
 const cleanPic = s => String(s || '').replace(/^\s*PACKING\s*ONLINE\s*:?\s*/i, '').trim().toUpperCase();
 const emptyRow = (t, c) => '<tr><td colspan="8" class="msg ' + (c || '') + '">' + t + '</td></tr>';
-const DEF_KEY = new URLSearchParams({ action: 'list', page: 1, per: PER, tgl: '', pic: '', kurir: '', q: '' }).toString();
+const is3 = () => !!(S && S.mode === '3pl');
+const defKey = () => new URLSearchParams({ action: 'list', page: 1, per: PER, from: '', to: '', pic: '', kurir: '', q: '', ...(is3() ? { kpi: 1 } : {}) }).toString();
 
 const kurirOpts = [...$('pengiriman').options].filter(o => o.value);
 $('kurir').innerHTML = '<option value="">Semua pengiriman</option>' + kurirOpts.map(o => '<option value="' + esc(o.value) + '">' + esc(o.value) + '</option>').join('');
 $('ePeng').innerHTML = '<option value="">-</option>' + kurirOpts.map(o => '<option value="' + esc(o.value) + '">' + esc(o.value) + '</option>').join('');
 
-const filters = () => ({ tgl: $('tgl').value, pic: $('pic').value.trim().toUpperCase(), kurir: $('kurir').value, q: $('q').value.trim().toUpperCase() });
+const filters = () => {
+  let a = $('tgl1').value, b = $('tgl2').value;
+  if (a && b && a > b) { $('tgl1').value = b; $('tgl2').value = a; [a, b] = [b, a]; }   // dari > sampai: tukar otomatis
+  return { from: a, to: b, pic: $('pic').value.trim().toUpperCase(), kurir: $('kurir').value, q: $('q').value.trim().toUpperCase() };
+};
 
 async function loadPics() {
   if (!S) return;
@@ -945,36 +959,42 @@ async function loadPics() {
   } catch (e) { picsLoaded = false; }
 }
 
-/* ---------- KPI Sertim 3PL: total invoice & koli per hari ---------- */
-async function loadKpi() {
-  if (!S || S.mode !== '3pl') return;
-  try {
-    const r = await fetch(API_URL + '?' + new URLSearchParams({ action: 'kpi', days: 14, token: S.token }));
-    const j = await r.json();
-    if (j.code === 'auth') return logout(j.message);
-    if (j.status !== 'success') throw new Error(j.message || 'Respon API tidak valid');
-    const f = n => (n || 0).toLocaleString('id-ID');
-    const td = j.rows.find(x => x.tanggal === todayISO()) || { invoice: 0, koli: 0 };
+/* ---------- KPI Sertim 3PL: dikirim bersama data list, ikut filter tanggal ---------- */
+function renderKpi(k) {
+  if (!k) return;
+  const f = n => (n || 0).toLocaleString('id-ID'), rg = k.range, days = k.rows.length;
+  if (!rg) {
+    const td = k.rows.find(x => x.tanggal === todayISO()) || { invoice: 0, koli: 0 };
+    $('kTitle').textContent = 'KPI Sertim 3PL · 14 hari terakhir';
+    $('kL1').textContent = 'Invoice hari ini'; $('kL2').textContent = 'Koli hari ini';
+    $('kL3').textContent = 'Invoice 14 hari'; $('kL4').textContent = 'Koli 14 hari';
     $('kInv').textContent = f(td.invoice); $('kKoli').textContent = f(td.koli);
-    $('kInv14').textContent = f(j.totInvoice); $('kKoli14').textContent = f(j.totKoli);
-    const mx = Math.max(1, ...j.rows.map(x => x.invoice));
-    $('kBody').innerHTML = '<div class="kr h"><span>Tanggal</span><span></span><span class="n">Invoice</span><span class="n">Koli</span></div>' +
-      (j.rows.length
-        ? j.rows.map(x => '<div class="kr"><span>' + esc(tglID(x.tanggal)) + '</span><div class="kbar"><i style="width:' + Math.round(x.invoice / mx * 100) + '%"></i></div><span class="n"><b>' + f(x.invoice) + '</b></span><span class="n">' + f(x.koli) + '</span></div>').join('')
-        : '<div class="msg">Belum ada data.</div>');
-  } catch (e) { $('kBody').innerHTML = '<div class="msg err">Gagal memuat KPI: ' + esc(e.message) + '</div>'; }
+    $('kInv14').textContent = f(k.totInvoice); $('kKoli14').textContent = f(k.totKoli);
+  } else {
+    const lbl = rg.from && rg.to ? (rg.from === rg.to ? tglID(rg.from) : tglID(rg.from) + ' s/d ' + tglID(rg.to)) : rg.from ? 'sejak ' + tglID(rg.from) : 'sampai ' + tglID(rg.to);
+    $('kTitle').textContent = 'KPI Sertim 3PL · ' + lbl + (k.filtered ? ' · sesuai filter' : '');
+    $('kL1').textContent = 'Total invoice'; $('kL2').textContent = 'Total koli';
+    $('kL3').textContent = 'Rata-rata invoice/hari'; $('kL4').textContent = 'Hari ada data';
+    $('kInv').textContent = f(k.totInvoice); $('kKoli').textContent = f(k.totKoli);
+    $('kInv14').textContent = f(days ? Math.round(k.totInvoice / days) : 0); $('kKoli14').textContent = f(days);
+  }
+  const mx = Math.max(1, ...k.rows.map(x => x.invoice));
+  $('kBody').innerHTML = '<div class="kr h"><span>Tanggal</span><span></span><span class="n">Invoice</span><span class="n">Koli</span></div>' +
+    (days
+      ? k.rows.map(x => '<div class="kr"><span>' + esc(tglID(x.tanggal)) + '</span><div class="kbar"><i style="width:' + Math.round(x.invoice / mx * 100) + '%"></i></div><span class="n"><b>' + f(x.invoice) + '</b></span><span class="n">' + f(x.koli) + '</span></div>').join('')
+      : '<div class="msg">Tidak ada data pada periode ini.</div>');
 }
 
 async function loadMon(force) {
   if (!S) return;
-  const key = new URLSearchParams({ action: 'list', page, per: PER, ...filters() }).toString();
+  const key = new URLSearchParams({ action: 'list', page, per: PER, ...filters(), ...(is3() ? { kpi: 1 } : {}) }).toString();
   if (!force && CACHE.has(key)) { wantKey = key; applyData(CACHE.get(key)); return; }
   if (!force && key === wantKey && reqCtl) return;
   if (reqCtl) reqCtl.abort();
-  wantKey = key; reqCtl = new AbortController();
+  wantKey = key; reqCtl = new AbortController(); $('ldbar').classList.add('on');
   const ctl = reqCtl, wrap = $('tbwrap');
   if (!CUR.length) {
-    const stale = key === DEF_KEY ? lsGet('mon0') : null;
+    const stale = key === defKey() ? lsGet('mon0') : null;
     if (stale) applyData(stale); else $('list').innerHTML = emptyRow('Memuat data...');
   }
   if (CUR.length) wrap.classList.add('busy');
@@ -984,7 +1004,7 @@ async function loadMon(force) {
     if (j.code === 'auth') return logout(j.message);
     if (j.status !== 'success') throw new Error(j.message || 'Respon API tidak valid');
     CACHE.set(key, j); if (CACHE.size > 40) CACHE.delete(CACHE.keys().next().value);
-    if (key === DEF_KEY) lsSet('mon0', j);
+    if (key === defKey()) lsSet('mon0', j);
     monLoaded = true;
     if (key === wantKey) applyData(j);
   } catch (e) {
@@ -992,12 +1012,13 @@ async function loadMon(force) {
     wrap.classList.remove('busy');
     if (!CUR.length) $('list').innerHTML = emptyRow('Gagal memuat data: ' + esc(e.message), 'err');
     else toast('Gagal memuat data terbaru: ' + e.message, false);
-  } finally { if (reqCtl === ctl) reqCtl = null; }
+  } finally { if (reqCtl === ctl) { reqCtl = null; $('ldbar').classList.remove('on'); } }
 }
 
 function applyData(j) {
   CUR = j.rows.map(d => ({ ...d, pic: cleanPic(d.pic) }));
   page = j.page; pages = j.pages;
+  if (is3()) renderKpi(j.kpi);
   $('tbwrap').classList.remove('busy');
   $('stats').innerHTML = '<span>Data: <b>' + j.total.toLocaleString('id-ID') + '</b></span><span>Total koli: <b>' + j.totalKoli.toLocaleString('id-ID') + '</b></span>';
   renderTable();
@@ -1023,12 +1044,12 @@ function renderTable() {
 
 const deb = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
 const refilter = () => { page = 1; loadMon(); };
-['tgl', 'kurir'].forEach(id => $(id).addEventListener('change', refilter));
+['tgl1', 'tgl2', 'kurir'].forEach(id => $(id).addEventListener('change', refilter));
 $('pic').addEventListener('input', deb(refilter, 450));
 $('pic').addEventListener('focus', e => e.target.select());
 $('q').addEventListener('input', deb(refilter, 450));
-$('reset').onclick = () => { $('tgl').value = ''; $('pic').value = ''; $('kurir').value = ''; $('q').value = ''; refilter(); };
-$('reload').onclick = () => { CACHE.clear(); picsLoaded = false; loadPics(); loadMon(true); loadKpi(); };
+$('reset').onclick = () => { $('tgl1').value = ''; $('tgl2').value = ''; $('pic').value = ''; $('kurir').value = ''; $('q').value = ''; refilter(); };
+$('reload').onclick = () => { CACHE.clear(); picsLoaded = false; loadPics(); loadMon(true); };
 $('pager').addEventListener('click', e => { const b = e.target.closest('button[data-p]'); if (!b) return; page += +b.dataset.p; loadMon(); $('tbwrap').scrollTop = 0; });
 
 /* ---------- Galeri foto ---------- */
